@@ -1,0 +1,960 @@
+# Payroll Management Application
+
+## Overview
+A comprehensive payroll management system for tracking employees, work hours, calculating monthly salaries with leave management capabilities, payment tracking, and simplified balance calculations. The application interface will be in Greek with optimized performance and flawless functionality. The application is open access - any user can connect and use all features without authentication or authorization restrictions.
+
+## Core Features
+
+### Employee Management
+- **FULLY STABILIZED: "Εργαζόμενοι" page functionality with GUARANTEED instant availability, bulletproof data persistence, and seamless integration**:
+  - **Page header displays "Εργαζόμενοι"**: The main employees management page shows "Εργαζόμενοι" as the page title
+  - **INSTANT form availability with zero delays**: Form opens immediately and is fully interactive without any initialization delays, blocking screens, or loading states
+  - **BULLETPROOF field accessibility with comprehensive validation**: Form includes all required and optional fields that are immediately accessible and functional:
+    - **Όνομα (Name)** - required text field with instant validation and error feedback
+    - **ENHANCED: Τύπος Εργαζομένου (Employee Type)** - required selection field with two options:
+      - **"Μηνιαίος εργαζόμενος" (Monthly Employee)** - for employees with fixed monthly salary
+      - **"Ωριαίος εργαζόμενος" (Hourly Employee)** - for employees paid by hours worked
+    - **ENHANCED: Conditional salary fields based on employee type**:
+      - **For "Μηνιαίος εργαζόμενος"**: Display **Μηνιαίος Μισθός (Monthly Salary)** field - required decimal field representing the fixed total monthly salary
+      - **For "Ωριαίος εργαζόμενος"**: Display **Ωριαία Αμοιβή (Hourly Rate)** field - required decimal field with bulletproof comma/dot separator support and precision validation
+    - **Αμοιβή Υπερωριών (Overtime Rate)** - required decimal field with bulletproof comma/dot separator support and precision validation (for both employee types)
+    - **Συνολικές Ημέρες Άδειας (Total Annual Leave Days)** - optional integer field with validation
+    - **Email** - optional text field with proper email validation
+    - **Τηλέφωνο (Phone)** - optional text field
+    - **IBAN** - optional text field
+  - **FULLY STABILIZED: "Προσθήκη" button with GUARANTEED functionality and zero-failure operation**:
+    - **Prominent blue button styling**: Clear visual prominence with blue color indicating interactivity
+    - **BULLETPROOF single-click success**: Form submission succeeds completely on the first button click attempt without any failures
+    - **ENHANCED backend communication**: Optimized communication protocols ensuring 100% reliable employee creation with employee type support
+    - **PERFECT decimal processing**: Flawless handling of decimal values with comma/dot separator support and accurate Float conversion without data loss
+    - **COMPREHENSIVE error recovery**: Automatic recovery from any connection issues without disrupting user experience
+    - **GUARANTEED data persistence**: ALL employee fields including employee type are stored accurately with proper decimal number handling and complete validation
+  - **STABILIZED: Success and error notifications with clear Greek messages**:
+    - Success notification: "Ο εργαζόμενος προστέθηκε επιτυχώς!" with green styling and checkmark
+    - Loading notification: "Αποθήκευση..." during save operation
+    - Network error: "Πρόβλημα δικτύου. Δοκιμάστε ξανά."
+    - Validation error: "Παρακαλώ ελέγξτε τα δεδομένα που εισάγατε."
+    - Backend error: "Πρόβλημα με το σύστημα, δοκιμάστε ξανά"
+  - **GUARANTEED: Immediate employee list refresh and display**: Upon successful employee addition, the employee list automatically refreshes and displays the new employee with all entered details correctly shown, ensuring immediate visibility
+  - **FULLY STABILIZED: Consistent behavior for ALL employees (first and subsequent)**:
+    - **NO automatic navigation**: Employee addition NEVER triggers automatic navigation to calendar views for ANY employee
+    - **IMMEDIATE calendar availability**: ALL employees' calendars become instantly available in "Ημερολόγιο Εργαζομένων" after addition
+    - **UNIFORM backend initialization**: Backend properly initializes all necessary data structures for EVERY employee consistently
+    - **IDENTICAL frontend handling**: Frontend treats ALL employee additions identically without special routing logic
+  - **BULLETPROOF: Employee data synchronization**: All added employees immediately appear in ALL relevant sections with complete data integrity and instant availability
+- Edit existing employee information including overtime rate and employee type with enhanced decimal precision and parsing
+- Delete employees from the system with proper cleanup and confirmation
+- View list of all employees with responsive layout and real-time updates
+- **ENHANCED: Employee card display without monthly bank salary management**: Employee cards display all employee information (name, employee type, salary/hourly rate, overtime rate, leave days, contact information) with clean layout and consistent styling, without any monthly bank salary management buttons or controls
+
+### Monthly Bank Salary Management
+- **NEW: Dedicated Monthly Bank Salary Management Page (Μηνιαίοι Μισθοί Τράπεζας)**: Comprehensive dedicated page for managing monthly bank salaries with three main sections:
+  - **Bulk Monthly Bank Salary Management (Μαζική Προσθήκη Μηνιαίων Μισθών Τράπεζας)**: Enhanced bulk bank salary management feature for efficient monthly salary setup:
+    - **Bulk bank salary entry interface**: Interface to select the target month and year for bulk bank salary entry
+    - **All employees table display**: Comprehensive table listing all employees in the system with input fields for monthly bank salary amounts
+    - **Decimal bank salary input**: Each employee row contains a validated input field for bank salary amount with bulletproof comma/dot separator support and precision validation
+    - **Enhanced validation**: Comprehensive validation for all bulk bank salary entries with clear Greek error messages
+    - **"Αποθήκευση Όλων" (Save All) functionality**: Bulk save button that updates the backend using bulk calls to `setMonthlyBankSalary` for all employees at once
+    - **Immediate payroll synchronization**: Instant reflection of bulk bank salary entries in payroll calculations with automatic payroll recalculation and real-time UI updates
+    - **Greek UI labels and consistent styling**: All interface elements use proper Greek labels and maintain consistent styling with existing application pages
+    - **Error handling and success notifications**: Comprehensive error handling with clear Greek messages and success confirmation after bulk save operations
+    - **Real-time data updates**: Bulk bank salary changes are immediately reflected across all payroll views without requiring manual refresh
+  - **Individual Monthly Bank Salary Management (Ατομική Προσθήκη Μηνιαίων Μισθών Τράπεζας)**: Individual bank salary management feature:
+    - **Employee selection interface**: Dropdown to select individual employees for bank salary entry
+    - **Month and year selection**: Interface to select the target month and year for individual bank salary entry
+    - **Individual bank salary input**: Validated input field for bank salary amount with bulletproof comma/dot separator support and precision validation
+    - **Enhanced validation**: Comprehensive validation for individual bank salary entries with clear Greek error messages
+    - **"Αποθήκευση" (Save) functionality**: Save button that updates the backend using `setMonthlyBankSalary` for the selected employee
+    - **Immediate payroll synchronization**: Instant reflection of individual bank salary entries in payroll calculations with automatic payroll recalculation and real-time UI updates
+    - **Greek UI labels and consistent styling**: All interface elements use proper Greek labels and maintain consistent styling
+    - **Error handling and success notifications**: Comprehensive error handling with clear Greek messages and success confirmation after save operations
+  - **Monthly Bank Salary View (Προβολή Μηνιαίων Μισθών Τράπεζας)**: Comprehensive view of all monthly bank salaries:
+    - **All monthly bank salaries table**: Display table showing all monthly bank salaries by employee, month, and year
+    - **Employee-based organization**: Data organized by employee with clear employee identification
+    - **Month and year display**: Clear display of month and year for each bank salary entry
+    - **Bank salary amount display**: Clear display of bank salary amounts with proper Greek formatting
+    - **Comprehensive data retrieval**: Uses backend `getMonthlyBankSalary` query to retrieve all monthly bank salary data
+    - **Real-time data updates**: Table automatically updates when bank salary data changes
+    - **Responsive table design**: Table adapts to different screen sizes while maintaining readability
+    - **Greek UI labels**: All table headers and labels use proper Greek terminology
+    - **Data filtering and sorting**: Options to filter and sort bank salary data by employee, month, or year
+    - **Empty state handling**: Proper display when no monthly bank salary data exists
+    - **ENHANCED: Monthly bank salary editing and deletion with open access**: Full editing and deletion capabilities for monthly bank salary entries:
+      - **Edit monthly bank salary functionality**: Allow users to modify existing monthly bank salary entries with comprehensive validation and error handling
+      - **Delete monthly bank salary functionality**: Allow users to remove monthly bank salary entries with proper confirmation dialogs
+      - **Open access authorization**: Both edit and delete operations are available to all users without admin-only restrictions
+      - **Automatic payroll recalculation**: Backend automatically triggers payroll recalculation after monthly bank salary edits or deletions
+      - **Real-time UI updates**: Frontend automatically refreshes payroll displays after monthly bank salary modifications
+      - **Comprehensive validation**: Full validation for edit operations with clear Greek error messages
+      - **Confirmation dialogs**: Proper confirmation dialogs for delete operations with Greek text
+      - **Error handling**: Comprehensive error handling for both edit and delete operations with clear user feedback
+
+### Work Hours Calendar
+- **ENHANCED: Bulletproof work hours calendar system with guaranteed functionality, automatic calendar synchronization, visual hour display, automatic leave integration, and enhanced daily bulk entry with automatic data retrieval**:
+  - Interactive calendar interface with two optimized view modes:
+    - **Per-employee view (Ατομική Καταχώρηση Ωρών Εργασίας)**: Individual calendar for recording daily work data for selected employee
+    - **ENHANCED: Daily entry view (Μαζική Καταχώρηση Ωρών Εργασίας) with automatic data retrieval and pre-filling**: Date-focused view showing all employees for a selected date with enhanced date picker functionality and automatic retrieval of previously saved hours
+  - **Improved layout for view mode selection**: Clear navigation between view modes with proper spacing and accessibility
+  - Smooth toggle or tab navigation to switch between the two view modes
+  - Navigate between months and years in calendar views with efficient loading and error handling
+  - **ENHANCED: Automatic calendar synchronization with visual hour display**: All work hours entered through any method (individual or bulk entry) are automatically synchronized and visually displayed in the employee's calendar view:
+    - **Visual hour indicators on calendar dates**: Calendar displays visual indicators showing normal hours, overtime hours, and leave status for each date
+    - **Real-time calendar updates**: Calendar view automatically refreshes to show newly entered or modified hours without manual refresh
+    - **Persistent visual display**: All entered hours remain visually displayed in the calendar across sessions and page reloads
+    - **Comprehensive hour visualization**: Calendar clearly distinguishes between normal working hours, overtime hours, and leave days with appropriate visual styling
+
+#### Per-Employee Calendar View (Ατομική Καταχώρηση Ωρών Εργασίας)
+- **ENHANCED: Employee calendar rendering with automatic synchronization and visual hour display**: 
+  - Select employee to view/edit their calendar data with instant loading and proper error handling
+  - **GUARANTEED: Bulletproof calendar rendering for ALL employees with automatic backend initialization**: Ensures that when ANY employee is added to the system, their calendar immediately appears and functions correctly without requiring page refresh, additional initialization, or manual setup
+  - **GUARANTEED: Work hours entry functionality for ALL employees**: Reliable data entry and editing capabilities that work immediately for ANY employee added to the system, ensuring the calendar component initializes automatically
+  - **GUARANTEED: Perfect employee calendar linkage with automatic backend setup**: Ensures proper association between employee records and their calendar data, preventing missing links, broken references, or initialization failures through automatic backend data structure creation
+  - **GUARANTEED: Automatic calendar component initialization with immediate availability**: When ANY employee is created, their calendar component is automatically initialized and made available in the individual calendar view without delays or errors through enhanced frontend state management
+  - **ENHANCED: Visual display of entered hours on calendar**: Calendar displays all previously entered work hours, overtime hours, and leave days as visual indicators on each date, automatically synchronized from both individual and bulk entry methods
+- **Fixed date selection and navigation with comprehensive error prevention**:
+  - **Bulletproof date selection**: Robust date picker functionality that prevents errors, blank pages, white screens, and interface freezing
+  - **Guaranteed smooth date navigation**: Date selection mechanism that works reliably without causing page reloads or application crashes
+  - **Immediate data synchronization**: Automatic refresh of employee work data when date is changed with proper loading states
+- **ENHANCED: Work hours entry with bulletproof validation, automatic payroll updates, calendar synchronization, and automatic leave integration**:
+  - Record daily work data for each employee:
+    - **ENHANCED: Employee type-aware work hours entry**:
+      - **For "Ωριαίος εργαζόμενος" (Hourly Employee)**: Normal work hours (supports fractional values like 8.5, 8.75, 8.9 with comprehensive decimal validation)
+      - **For "Μηνιαίος εργαζόμενος" (Monthly Employee)**: Work day presence tracking (present/absent) for payroll calculation purposes
+    - Overtime hours (supports fractional values like 1.5, 2.3, 2.75 with comprehensive decimal validation) - for both employee types
+    - Leave days (full or partial) - for both employee types
+  - **Enhanced decimal validation for work hours**: Comprehensive validation for fractional hour entries with support for values like 8.5, 8.75, including proper comma/dot separator handling
+  - **ENHANCED: Work hours storage and retrieval with automatic calendar synchronization**: Robust backend operations that ensure work hours are correctly stored, retrieved, and automatically displayed in the calendar view:
+    - **Bulletproof data persistence**: Work hours are reliably saved to backend storage with comprehensive validation
+    - **Accurate data retrieval**: Stored work hours are correctly loaded and displayed when viewing employee calendars
+    - **Error-free hour modifications**: Existing work hour entries can be modified without data corruption or loss
+    - **Immediate data availability**: Saved work hours are instantly available across all application views
+    - **ENHANCED: Automatic calendar visual synchronization**: All entered hours are immediately reflected as visual indicators in the calendar view without requiring manual refresh
+    - **Automatic payroll recalculation trigger**: Backend automatically invokes payroll recalculation after individual work hour submissions, ensuring payroll data is updated and reflected in the frontend
+    - **Real-time frontend payroll refresh**: Frontend automatically detects work hour changes and refreshes payroll displays without requiring page reload or manual refresh
+  - **ENHANCED: Automatic leave integration with calendar work day entry**: When marking a day as leave (`isLeave = true`) in the individual calendar, the system:
+    - **Automatic leave record creation**: Backend automatically creates a leave record in the employee's leave tracking system when a work day is marked as leave
+    - **Immediate leave balance deduction**: Automatically deducts 1 day from the employee's remaining leave balance in real-time
+    - **Automatic leave page refresh**: Frontend automatically refreshes the Leave section to show updated balance (used, remaining, and total days) without manual refresh
+    - **ENHANCED: Employee type-aware leave calculation**: 
+      - **For "Ωριαίος εργαζόμενος"**: Automatically counts the leave day as 8 hours of normal work for payroll calculation purposes
+      - **For "Μηνιαίος εργαζόμενος"**: Leave days do not affect the fixed monthly salary but are tracked for leave balance purposes
+    - **Seamless payroll integration**: Ensures leave days contribute to monthly calculations appropriately based on employee type
+    - **Prevents duplicate hour entries**: Prevents duplicate hour entries when re-saving work days marked as leave
+    - **ENHANCED: Visual leave indication in calendar**: Leave days are clearly marked with distinct visual styling in the calendar view
+    - **Real-time leave synchronization**: Leave records are immediately synchronized across calendar, payroll, and leave management sections
+- **ENHANCED: Automatic payroll synchronization with real-time updates and calendar display**: After adding or modifying work hours for any employee, the payroll calculations are automatically updated without requiring page refresh, with enhanced frontend hooks triggering real-time UI updates and ensuring the "Μισθοδοσία" section immediately reflects accurate totals and overtime, while the calendar view simultaneously displays the entered hours visually
+
+#### ENHANCED: Daily Entry View (Μαζική Καταχώρηση Ωρών Εργασίας) with Automatic Data Retrieval and Pre-filling
+- **ENHANCED: Bulk work hours entry with guaranteed functionality, crash prevention, automatic calendar synchronization, automatic leave integration, and automatic data retrieval with pre-filling**:
+  - Display all employees in a single column table with responsive design and proper data loading
+  - **Enhanced date selection functionality with bulletproof calendar interface and crash prevention**: 
+    - **Robust date picker with comprehensive error handling and white screen prevention**: Interactive date picker with enhanced stability and error prevention that prevents white screens, blank pages, and application crashes when selecting different dates
+    - **Guaranteed smooth date selection with proper state management**: Date selection mechanism that prevents freezing, errors, or page reloads when switching between dates, including proper loading states and error boundaries
+    - **ENHANCED: Immediate data synchronization with automatic pre-filling and crash prevention**: Automatic refresh of employee data when date is changed with proper loading states, error handling, prevention of UI crashes during date transitions, and automatic retrieval and pre-filling of previously saved work hours for the selected date
+    - **Fixed date change handling**: Ensures that when users select a different date from the current one, the application correctly updates the selected date and loads appropriate records without crashing or showing white screens
+  - **Selected date display**: Clear display of the currently selected date in Greek formatting
+  - **ENHANCED: Automatic data retrieval and pre-filling for selected date**: When a date is selected, the system automatically retrieves and displays previously saved work hours for all employees:
+    - **Automatic work hours retrieval**: Backend automatically queries and retrieves existing work day records for all employees for the selected date
+    - **Form field pre-filling**: Input fields are automatically populated with previously saved normal hours and overtime hours for each employee
+    - **Employee type-aware pre-filling**: Pre-filling respects employee type differences:
+      - **For "Ωριαίος εργαζόμενος"**: Pre-fill normal hours and overtime hours fields with saved values
+      - **For "Μηνιαίος εργαζόμενος"**: Pre-fill work day presence status and overtime hours with saved values
+    - **Leave status pre-filling**: Automatically display leave status for employees who have leave marked for the selected date
+    - **Real-time data loading**: Previously saved data loads immediately when date is selected without delays or loading screens
+    - **Consistent data accuracy**: Pre-filled data exactly matches the stored work day records for the selected date
+    - **Empty state handling**: For dates with no previously saved data, form fields remain empty and ready for new input
+  - **Bulletproof date-based data operations with enhanced stability and automatic data retrieval**: 
+    - **Reliable employee data loading with crash prevention and automatic pre-filling**: Automatic loading of all employees including newly added ones with their work day entries for selected date, with comprehensive error handling to prevent crashes and automatic pre-filling of existing data
+    - **Stable hour input management with proper state handling**: Input fields update correctly without interface errors, data loss, or crashes during date changes, while maintaining pre-filled values from previous saves
+    - **Comprehensive error handling with crash prevention**: Robust error handling for all date-based operations that prevents application crashes and white screens while ensuring data retrieval and pre-filling works correctly
+- **ENHANCED: Employee type-aware bulk work hours input with comprehensive decimal validation and automatic pre-filling**:
+  - Each employee row contains validated input fields based on employee type that are automatically pre-filled with previously saved data:
+    - **For "Ωριαίος εργαζόμενος" (Hourly Employee)**: 
+      - Normal hours (supports fractional values like 8.5, 8.75, 8.9 with precision validation and comma/dot separator handling, automatically pre-filled with saved values)
+      - Overtime hours (supports fractional values like 1.5, 2.3, 2.75 with precision validation and comma/dot separator handling, automatically pre-filled with saved values)
+    - **For "Μηνιαίος εργαζόμενος" (Monthly Employee)**:
+      - Work day presence (checkbox or toggle for present/absent, automatically pre-filled with saved status)
+      - Overtime hours (supports fractional values like 1.5, 2.3, 2.75 with precision validation and comma/dot separator handling, automatically pre-filled with saved values)
+  - **Enhanced decimal validation for bulk entry**: Comprehensive validation for all fractional hour entries with proper error messages in Greek
+  - **Seamless data modification**: Users can modify pre-filled values and save updates without data conflicts or duplication
+- **ENHANCED: Bulk work hours storage and processing with GUARANTEED payroll synchronization, calendar synchronization, automatic leave integration, crash prevention, and update handling**: Enhanced bulk save functionality that ensures all work hour entries are correctly stored, immediately reflected in calendar views, synchronized with payroll, automatically integrated with leave tracking, and properly handles updates to existing records:
+  - **ENHANCED: Update handling for existing records**: When saving bulk work hours for a date that already has saved data:
+    - **Record update instead of duplication**: Backend updates existing work day records instead of creating duplicates
+    - **Seamless data modification**: Users can modify previously saved hours and save updates without conflicts
+    - **Consistent data integrity**: Updated records maintain proper data relationships and validation
+    - **Automatic conflict resolution**: Backend handles potential data conflicts gracefully during updates
+  - **Bulletproof bulk data persistence with complete record accuracy and crash prevention**: All employee work hours for the selected date are reliably saved with comprehensive validation, ensuring no missing or incorrect records during bulk operations and preventing crashes during save operations
+  - **Error-free bulk operations with complete data integrity and stability**: Bulk save operations complete successfully without data corruption, partial failures, missing employee records, or application crashes
+  - **ENHANCED: Immediate calendar synchronization**: Bulk-saved work hours are instantly reflected as visual indicators in all employee calendar views without requiring manual refresh
+  - **Immediate data availability with crash prevention**: Bulk-saved work hours are instantly available in individual employee calendars and payroll calculations without causing crashes or white screens
+  - **Real-time UI responsiveness with enhanced stability**: The interface remains responsive during bulk operations with proper loading states and prevents white screens, page reloads, or crashes
+  - **Automatic payroll recalculation trigger with guaranteed execution**: Backend automatically triggers payroll recalculation function after successful bulk save operations for all affected employees, ensuring complete payroll recalculation without crashes
+  - **ENHANCED: Automatic leave integration with bulk work day entry**: When any employee's work day is marked as leave (`isLeave = true`) in the bulk entry, the system:
+    - **Bulk leave record creation**: Backend automatically creates leave records for all employees marked as leave in the bulk operation
+    - **Immediate leave balance deduction for all affected employees**: Automatically deducts 1 day from each affected employee's remaining leave balance in real-time
+    - **Automatic leave page refresh**: Frontend automatically refreshes the Leave section to show updated balances for all affected employees without manual refresh
+    - **Bulk leave synchronization**: All leave records are immediately synchronized across calendar, payroll, and leave management sections for all affected employees
+  - **ENHANCED: GUARANTEED payroll and calendar synchronization with real-time UI updates**: Ensures payroll calculations are updated and reflected across all views while calendar views simultaneously display the entered hours visually, without requiring manual page refresh, with enhanced frontend hooks triggering real-time updates of both payroll and calendar UI right after hour submissions while preventing crashes
+  - **Real-time confirmation and refresh mechanism with stability**: Provides immediate visual confirmation of successful bulk save operations and triggers automatic refresh of both payroll data and calendar displays to show updated totals, hours, overtime values, and visual hour indicators without causing crashes
+  - **Fixed bulk save with proper integration**: Ensures that bulk work hours are correctly saved using the bulk mutation with proper error handling and immediate payroll and calendar refresh
+- **Perfect data consistency with crash prevention**: Ensures all saved data corresponds exactly to the selected date with proper validation and prevents crashes during data operations
+- **ENHANCED: BULLETPROOF payroll and calendar synchronization with real-time UI updates and confirmation**: Guarantees that both payroll calculations and calendar visual displays are updated correctly after bulk work hours entry, with enhanced frontend components automatically refreshing both payroll displays and calendar views while providing visual confirmation of successful updates and preventing crashes and white screens
+
+### Monthly Payroll Calculation
+- **ENHANCED: SIMPLIFIED payroll calculation system with GUARANTEED accuracy, first employee support, complete employee coverage, employee type support, and SIMPLIFIED balance calculation**:
+  - **ENHANCED: SIMPLIFIED payroll calculation logic with employee type support and SIMPLIFIED balance calculation**: Payroll calculations use the CORRECT and VERIFIED formula for each employee type with SIMPLIFIED balance calculation:
+    - **ENHANCED: Employee type-aware salary calculation**:
+      - **For "Ωριαίος εργαζόμενος" (Hourly Employee)**: Total Monthly Salary = (Normal Hours + Leave Hours) × Hourly Rate + Overtime Hours × Overtime Rate
+      - **For "Μηνιαίος εργαζόμενος" (Monthly Employee)**: Total Monthly Salary = Fixed Monthly Salary + Overtime Hours × Overtime Rate
+    - **Monthly Bank Fixed Salary (Μηνιαίος Μισθός Τράπεζας)**: Display the monthly bank salary entered for the specific employee and month (if set)
+    - **Total Payments (Συνολικές Πληρωμές)**: Show cumulative total of all cash payments and all bank payments made to the employee for the month
+    - **Remaining Real Salary (Υπόλοιπο Πραγματικού Μισθού)**: Calculated as Total Monthly Salary − (Total Cash Payments + Total Bank Payments)
+    - **Remaining Bank Balance (Υπόλοιπο Τράπεζας)**: Calculated as Monthly Bank Fixed Salary − Total Bank Payments for the same month
+    - **GUARANTEED proper rate usage**: Ensures the stored hourly rate (for hourly employees), monthly salary (for monthly employees), and overtime rate values are CORRECTLY retrieved and used in calculations without being zeroed out or corrupted
+    - **ACCURATE leave hours handling by employee type**: 
+      - **For "Ωριαίος εργαζόμενος"**: Leave days are CORRECTLY counted as 8 hours of normal work for salary calculation purposes
+      - **For "Μηνιαίος εργαζόμενος"**: Leave days do not affect the fixed monthly salary calculation
+    - **PRECISE overtime calculation**: Overtime hours are CORRECTLY multiplied by the accurate overtime rate stored for each employee (both employee types)
+    - **BULLETPROOF decimal precision**: All calculations maintain proper decimal precision without rounding errors or data loss
+  - **ENHANCED: Structured payroll display with clear calculation hierarchy, employee type awareness, and SIMPLIFIED balance display**: Payroll information is displayed in the specific order for each employee with SIMPLIFIED balance calculation:
+    1. **ENHANCED Συνολικός Μηνιαίος Μισθός (Total Monthly Salary)**: Calculated using the employee type-aware formula above with VERIFIED accuracy
+    2. **ENHANCED Μηνιαίος Μισθός Τράπεζας (Monthly Bank Fixed Salary)**: Display the monthly bank salary entered for the specific employee and month
+    3. **Συνολικές Πληρωμές (Total Payments)**: Show cumulative total of all cash payments and all bank payments made to the employee for the month
+    4. **Υπόλοιπο Πραγματικού Μισθού (Remaining Real Salary)**: Calculated as Total Monthly Salary − (Total Cash Payments + Total Bank Payments)
+    5. **Υπόλοιπο Τράπεζας (Remaining Bank Balance)**: Calculated as Monthly Bank Fixed Salary − Total Bank Payments for the same month
+    6. **ENHANCED Ανάλυση Ωρών (Analysis of Hours)**: Display breakdown based on employee type:
+       - **For "Ωριαίος εργαζόμενος"**: Regular hours, overtime hours, and leave hours for the selected month
+       - **For "Μηνιαίος εργαζόμενος"**: Work days present, overtime hours, and leave days for the selected month
+  - **Enhanced visual separation and layout**: Clear sections for each calculation component with proper Greek labeling and improved readability
+  - **Improved multi-employee display**: Enhanced layout for viewing all employees simultaneously with automatic scroll handling and clear employee separation
+  - **ENHANCED: SIMPLIFIED total monthly salary calculation with employee type support**: Precisely calculate total monthly salary using the CORRECT employee type-aware formulas, with VERIFIED accuracy
+  - **Bulletproof date-based filtering**: Ensure only work hours and leave entries from the selected month and year are included in calculations
+  - **ENHANCED: Automatic real-time calculation updates with automatic synchronization and SIMPLIFIED balance calculation**: All payroll values update accurately when work hours are modified through individual or bulk entry, with enhanced automatic backend recalculation triggers and frontend synchronization that ensures payroll displays are updated in real-time while calendar views simultaneously display the visual hour indicators, including SIMPLIFIED balance calculation
+  - **Fixed zero value display issues**: Ensure proper rendering of all payroll components without showing incorrect zero values when data exists
+  - **ENHANCED: Employee type-aware hours breakdown with accurate totals**: Display precise breakdown based on employee type:
+    - **For "Ωριαίος εργαζόμενος"**: Total normal hours (including leave-based hours), total overtime hours, total leave hours for the selected month
+    - **For "Μηνιαίος εργαζόμενος"**: Total work days present, total overtime hours, total leave days for the selected month
+  - **ENHANCED: Automatic payroll refresh after work hours changes with real-time UI updates and SIMPLIFIED balance calculation**: Payroll calculations are automatically updated whenever work hours are added or modified through any interface, with enhanced frontend hooks ensuring payroll UI updates while calendar views simultaneously display visual hour indicators, including SIMPLIFIED balance calculation
+  - **ENHANCED: Automatic payroll refresh after payment changes with real-time UI updates and SIMPLIFIED balance calculation**: Payroll calculations are automatically updated whenever payments are added or modified, ensuring remaining balances are instantly recalculated and displayed, including SIMPLIFIED balance calculation
+  - **ENHANCED: Automatic payroll refresh after bank salary changes with real-time UI updates and SIMPLIFIED balance calculation**: Payroll calculations are automatically updated whenever monthly bank salaries are added or modified through individual or bulk entry, ensuring bank balance calculations are instantly recalculated and displayed with SIMPLIFIED balance calculation
+  - **Error-free payroll data retrieval**: Robust backend functions that correctly aggregate work hours and calculate salaries without data corruption or missing entries
+  - **ENHANCED: GUARANTEED bulk entry payroll synchronization with real-time updates, calendar synchronization, SIMPLIFIED balance calculation, and confirmation**: Backend automatically recalculates and updates payroll data after bulk work hours are saved, with enhanced frontend components and hooks ensuring both payroll displays and calendar visual indicators are updated without manual page refresh and providing visual confirmation of successful updates, including SIMPLIFIED balance calculation
+- **ENHANCED: GUARANTEED backend-frontend synchronization with real-time updates, calendar display, and SIMPLIFIED balance calculation**: Ensure payroll data updates are synchronized between backend calculations and frontend display after any modification to work days, leave entries, employee wage information, payments, or bank salaries, with enhanced automatic UI refresh mechanisms that provide updates to both payroll displays and calendar visual hour indicators, including SIMPLIFIED balance calculation
+- **Bulletproof month/year filtering validation**: Comprehensive validation to ensure payroll calculations only include relevant data for the selected time period
+- **ENHANCED: All Employees Payroll View with complete employee coverage, accuracy, employee type support, SIMPLIFIED balance calculation, and responsive summary table with multiline column headers**: 
+  - **ENHANCED: Complete employee coverage using getAllEmployeesPayrollData**: View payroll records for ALL employees in the system simultaneously using the backend `getAllEmployeesPayrollData` function, ensuring no employees are missing from the results list
+  - **GUARANTEED calculation accuracy for all employees with employee type support and SIMPLIFIED balance calculation**: Ensures all payroll calculations are accurate and consistent across all views without zero value display errors, with employee type-aware calculations and SIMPLIFIED balance calculation
+  - **ENHANCED: Responsive summary table for "Όλοι οι εργαζόμενοι" view with specific 10-column layout, multiline column headers, and SIMPLIFIED balance columns**: When "Όλοι οι εργαζόμενοι" is selected, display a fully responsive summary table with exactly 10 columns in the specified order with multiline column headers for compact display, including SIMPLIFIED balance calculation:
+    - **Single row per employee**: Each employee's complete payroll data displayed in one row
+    - **ENHANCED: Multiline column headers in Greek for compact display with SIMPLIFIED balance**: Well-organized columns with proper Greek labels split into two lines to reduce column width:
+      1. **Όνομα** (Employee Name) - single line header
+      2. **Συνολικός / Μισθός** (Total / Salary) - employee type-aware calculation
+      3. **Μηνιαίος / Μισθός Τράπεζας** (Monthly / Bank Salary)
+      4. **Υπόλοιπο / Συνολικού Μισθού** (Remaining / Real Salary)
+      5. **Υπόλοιπο / Τράπεζας** (Remaining / Bank Balance) - SIMPLIFIED calculation
+      6. **Πληρωμές / Μετρητά** (Payments / Cash)
+      7. **Πληρωμές / Τράπεζα** (Payments / Bank)
+      8. **Κανονικές / Ώρες** (Normal / Hours)
+      9. **Υπερωρίες** (Overtime) - single line header
+      10. **Ημέρες / Άδειας** (Leave / Days)
+    - **Controlled text wrapping with CSS**: Column headers use CSS properties like `white-space: normal; text-align: center; line-height: 1.2;` for proper multiline display
+    - **Reduced table width**: Overall table width is optimized to fit fully on screen without horizontal scrolling
+    - **Fully responsive design without horizontal scrolling**: Table automatically adjusts column widths and layout to fit all 10 columns on screen simultaneously across all device sizes
+    - **Proportional column sizing**: Intelligent column width distribution that ensures all data is visible while maintaining readability with compact multiline headers
+    - **Adaptive text sizing**: Text and numeric values scale appropriately for different screen sizes while maintaining legibility
+    - **Optimized column layout**: Strategic column ordering and sizing with multiline headers to maximize information density without compromising usability
+    - **Responsive table structure**: Table structure adapts to viewport constraints while ensuring all columns remain visible with compact headers
+    - **ENHANCED: Total summary row with SIMPLIFIED balance**: Bottom row showing totals for all numeric columns across all employees with responsive formatting, including SIMPLIFIED balance totals
+    - **Cross-device compatibility**: Table displays properly on desktop, tablet, and mobile devices without horizontal scrolling using multiline headers
+    - **Maintained alignment**: All numeric columns properly aligned for easy reading across all screen sizes with compact header display
+  - **ENHANCED: Data synchronization after any changes with real-time UI updates, calendar display, and SIMPLIFIED balance calculation**: Accurate updates when underlying work hour data, payment data, or bank salary data changes from any view, with enhanced frontend hooks ensuring automatic payroll display refresh while calendar views simultaneously show visual hour indicators, including SIMPLIFIED balance calculation
+  - **ENHANCED: Payroll display after bulk entry with real-time updates, calendar synchronization, SIMPLIFIED balance calculation, and confirmation**: Ensures payroll displays are accurately updated after using the bulk work hours entry feature or bulk bank salary entry feature, with enhanced automatic UI refresh triggered by frontend components and visual confirmation of successful updates, while calendar views simultaneously display the entered hours visually, including SIMPLIFIED balance calculation
+  - **Bulletproof employee retrieval**: Backend function reliably retrieves and processes payroll data for every employee without missing records or incomplete data
+
+### Payment Management
+- **GUARANTEED: Always accessible Payments module (Πληρωμές) with unconditional availability**: Robust payment tracking system that is always accessible regardless of navigation state, loaded data, or page context:
+  - **Unconditional navigation access**: Payments tab always appears in the main navigation and opens without conditional or restricted rendering
+  - **Independent functionality**: Payment features work independently of other application states and data loading conditions
+  - **Always visible payment modes**: Both individual and bulk payment entry modes are always visible and accessible on the PaymentsPage
+  - **Guaranteed availability**: Payment functionality remains accessible regardless of whether employees exist, data is loaded, or other application states
+- **ENHANCED: Multiple payments per employee per month with comprehensive support**: Complete support for adding multiple payment records per employee within the same month:
+  - **Multiple payment entries per month**: Allow unlimited payment records per employee for any given month, each with specific dates
+  - **Composite key storage**: Backend stores payment records using employee ID, payment date, and month/year as composite keys to support multiple entries
+  - **Cumulative payment calculation**: All payments within the same month are automatically summed for payroll calculations
+  - **Date-specific payment tracking**: Each payment record maintains its specific payment date for detailed tracking and reporting
+  - **Individual and bulk multiple payment support**: Both individual and bulk payment entry modes support adding multiple payments per employee per month
+- **Enhanced Payments module with comprehensive validation and guaranteed accessibility**: Bulletproof payment tracking system with enhanced error handling and unconditional access
+- Record payment information for each employee per month with enhanced decimal validation and guaranteed availability
+- **Payment record management with guaranteed reliability and unconditional access**:
+  - Add new payment records with comprehensive validation and error handling, always accessible
+  - View all payment records with proper filtering and data loading, always available
+  - **FIXED: Enhanced payment editing functionality with record update instead of duplication**: Reliable editing of existing payment records with validation that ensures updates to existing records instead of creating new ones:
+    - **Record update logic**: When editing an existing payment record, the system updates the existing record instead of creating a new payment entry
+    - **Preserve original payment date**: Payment edits maintain the original payment date from the existing record
+    - **Prevent duplicate records**: Backend ensures that payment edits do not result in duplicate payment records for the same employee and date
+    - **Automatic payroll recalculation after edits**: Backend automatically triggers payroll recalculation after payment record updates to reflect the new payment amounts in remaining balance calculations
+    - **Real-time UI updates after edits**: Frontend automatically refreshes payroll displays after payment edits to show updated remaining balances without manual refresh
+    - **Consistent edit behavior**: Both individual and bulk payment edit dialogs use the same record update logic to prevent duplication
+    - **Data integrity preservation**: Payment edits maintain proper data relationships and validation while updating existing records
+    - **Enhanced validation for edits**: Comprehensive validation for payment edit operations with clear Greek error messages
+    - **Edit confirmation and feedback**: Clear success notifications and error handling for payment edit operations
+  - **Bulletproof decimal input handling**: Support for both comma and dot decimal separators with proper validation, always functional
+- **Individual Payment Entry (Ατομική Καταχώρηση Πληρωμής) with guaranteed accessibility and date picker functionality**:
+  - **Always visible individual payment section**: Individual payment entry is always visible and accessible on the PaymentsPage regardless of application state
+  - **Payment date selection**: Interactive date picker field for selecting the payment date in DD-MM-YYYY format, always functional
+  - **Seamless form integration**: Date picker integrates smoothly with existing payment form layout, always available
+  - **Payment date storage**: Selected payment date is saved in the backend as the `paymentDate` field, always functional
+  - **Payment date display**: Saved payment date is clearly displayed in payment history and editing dialogs, always accessible
+  - **Consistent date handling**: Date picker works consistently for both cash and bank payment entries, always reliable
+  - **Enhanced validation**: Comprehensive validation for payment date selection with Greek error messages, always active
+  - **ENHANCED: Immediate payroll synchronization with SIMPLIFIED balance calculation**: Instant reflection of individual payment entries in payroll calculations with automatic payroll recalculation and real-time UI updates, always functional, including SIMPLIFIED balance calculation
+  - **Multiple payments per employee support**: Allow adding multiple individual payments for the same employee in the same month with different dates
+- **Bulk Payment Entry (Μαζική Καταχώρηση Πληρωμών) with guaranteed accessibility**: Feature for entering payments for all employees at once, always accessible:
+  - **Always visible bulk payment section**: Bulk payment entry is always visible and accessible on the PaymentsPage regardless of application state
+  - **Date picker for payment date selection**: Interactive date picker at the top to select the payment date, always functional
+  - **All employees payment table**: Display all employees in a table format with input fields for each employee, always available
+  - **Decimal payment input fields**: Each employee row contains validated input fields for:
+    - Cash payment amount (supports decimal values with comma/dot separator handling), always functional
+    - Bank payment amount (supports decimal values with comma/dot separator handling), always functional
+  - **Save All functionality**: Bulk save button to submit all payment entries for the selected date, always accessible
+  - **Enhanced validation and error handling**: Comprehensive validation for all bulk payment entries with clear Greek error messages, always active
+  - **ENHANCED: Immediate payroll synchronization with SIMPLIFIED balance calculation**: Instant reflection of bulk payment entries in payroll calculations with automatic payroll recalculation and real-time UI updates, always functional, including SIMPLIFIED balance calculation
+  - **Multiple bulk payments support**: Allow adding multiple bulk payment entries for different dates within the same month
+- **ENHANCED: Payment history and display with monthly aggregation, comprehensive employee selection, and payment record management**: Comprehensive payment viewing and management with enhanced employee filtering and payment record actions:
+  - **Employee selection dropdown**: Dropdown selector to choose between:
+    - Individual employees (showing only that employee's payments)
+    - "Όλοι οι εργαζόμενοι" (All employees) option to view all employees' payments
+  - **Individual employee view**: When a specific employee is selected:
+    - Show only that employee's payment records for the selected month
+    - Display individual payment details with dates, cash amounts, and bank amounts
+    - Show cumulative monthly totals for that employee only
+    - Maintain chronological sorting by payment date
+  - **ENHANCED: All employees aggregated view**: When "Όλοι οι εργαζόμενοι" is selected:
+    - **Independent aggregated display**: Display payment records for ALL employees simultaneously, completely independent of any previous individual employee selection
+    - **Employee-grouped payment display**: Show payment records grouped by employee with clear visual separation between different employees
+    - **Complete employee coverage**: Include ALL employees in the system regardless of any previous individual selections
+    - **Individual payment details per employee**: Display each payment with its specific date, cash amount, and bank amount for each employee
+    - **Employee-specific cumulative totals**: Show total cash payments and total bank payments for each individual employee separately
+    - **Clear employee headers**: Maintain proper employee grouping with clear headers showing employee names
+    - **Chronological sorting within employee groups**: All payments within each employee group are displayed chronologically by payment date
+    - **Combined monthly totals**: Display grand totals combining all payments across all employees for the selected month
+    - **Unaffected by individual selections**: The aggregated view remains consistent and shows all employees regardless of any previous individual employee selections made in other tabs or sections
+  - **ENHANCED: Payment record management with edit and delete functionality**: Each payment entry in the history includes action buttons for direct management:
+    - **FIXED: Edit payment button with record update logic**: Action button beside each payment entry that opens the existing `PaymentEditDialog` component pre-filled with the payment's data (employee, date, cash amount, bank amount) with enhanced logic to update existing records instead of creating new ones
+    - **Delete payment button**: Action button beside each payment entry that opens a confirmation modal ("Επιβεβαίωση διαγραφής") for payment deletion
+    - **Payment deletion confirmation**: Confirmation modal with Greek text asking for deletion confirmation before proceeding with the `deletePayment` backend function
+    - **ENHANCED: Automatic data refresh after edit with SIMPLIFIED balance calculation and record update**: After saving payment edits, automatically refresh the payment list and trigger payroll recalculation and real-time UI updates with the updated payment amounts reflected in remaining balance calculations, including SIMPLIFIED balance calculation, ensuring the existing record is updated rather than creating a duplicate
+    - **ENHANCED: Automatic data refresh after delete with SIMPLIFIED balance calculation**: After confirming payment deletion, automatically refresh the payment list and trigger payroll recalculation and real-time UI updates, including SIMPLIFIED balance calculation
+    - **Consistent UI styling**: Edit and delete buttons use consistent styling and placement with current design patterns (Greek labels, appropriate icons, same row alignment as other sections)
+    - **Action button accessibility**: Edit and delete buttons are clearly visible and accessible for each payment entry in both individual and aggregated views
+  - **Monthly payment list display**: Show all relevant payment records for the selected month based on employee selection
+  - **Individual payment details**: Display each payment with its specific date, cash amount, and bank amount
+  - **Cumulative monthly totals**: Show total cash payments and total bank payments appropriately based on selection
+  - **Date-sorted payment history**: All payments within scope are displayed chronologically by payment date
+  - **Real-time payment aggregation**: Cumulative totals update immediately when new payments are added
+  - **FIXED: Payment editing with date preservation and record update**: Edit existing payments while maintaining their original payment dates and updating the existing record instead of creating duplicates
+  - **Payment deletion with recalculation**: Remove individual payments with automatic recalculation of monthly totals
+  - **Consistent calculation accuracy**: All calculations remain accurate and consistent with monthly payroll data
+- **Enhanced PaymentRecord with payment date and guaranteed accessibility**: Payment records include a payment date field for better tracking and organization, always accessible
+- **ENHANCED: Seamless payroll integration with guaranteed functionality and SIMPLIFIED balance calculation**: Payment amounts automatically integrated with payroll calculations with real-time updates, payroll recalculation triggers, and guaranteed availability regardless of application state, including SIMPLIFIED balance calculation
+- **ENHANCED: Immediate payroll and balance refresh after payment operations with SIMPLIFIED balance calculation**: After payments are added, edited, or deleted in either individual or bulk mode, payroll calculations and remaining balances are immediately refreshed and updates are instantly visible across all related sections without manual refresh, including SIMPLIFIED balance calculation
+
+### Leave Tracking
+- **FULLY OPERATIONAL: Complete leave management system with guaranteed functionality, real-time updates, automatic calendar integration, automatic total leave days synchronization, and bulk leave functionality**: Comprehensive leave tracking system that is fully functional and always available with automatic synchronization of total leave days from employee profiles:
+  - **ENHANCED: Automatic total leave days synchronization with employee profiles**: The leave management system automatically synchronizes total leave days for each employee with the value entered in their employee profile:
+    - **Automatic synchronization on employee creation**: When a new employee is added with "Συνολικές ημέρες άδειας" (Total Annual Leave Days) field populated, the leave management system automatically initializes their total leave days to match this value
+    - **Dynamic synchronization on employee modification**: When an employee's "Συνολικές ημέρες άδειας" field is modified in their profile, the leave management system automatically updates their total leave days to reflect the new value
+    - **Real-time leave balance calculation**: Leave balances (used, remaining, total) are automatically recalculated based on the synchronized total leave days from the employee profile
+    - **Immediate UI updates**: Leave page displays are automatically updated to show the correct total leave days and recalculated balances when employee profiles are modified
+    - **Consistent data integrity**: Ensures that the total leave days displayed in the Leave page always match the corresponding totalAnnualLeaveDays field of each Employee record
+    - **Automatic backend synchronization**: Backend automatically retrieves and uses the employee's totalAnnualLeaveDays value for all leave calculations and balance tracking
+    - **Frontend synchronization**: Frontend leave components automatically refresh to display updated total leave days when employee data changes
+  - **FIXED: Individual leave addition functionality with guaranteed reliability for ALL employees**: Enhanced individual leave addition system that works correctly for every employee regardless of order or previous records:
+    - **BULLETPROOF "Προσθήκη Άδειας" button functionality**: The "Προσθήκη Άδειας" (Add Leave) button works correctly for EVERY employee individually without failures or inconsistencies
+    - **GUARANTEED backend call execution for ALL employees**: Backend leave addition function executes successfully for all existing employees regardless of their creation order, employee ID, or previous leave records
+    - **UNIVERSAL employee compatibility**: Leave addition works reliably for the first employee, last employee, and every employee in between without special handling or initialization requirements
+    - **CONSISTENT leave processing**: All employees receive identical leave processing behavior without variations based on their position in the employee list or previous system interactions
+    - **IMMEDIATE leave balance deduction for ALL employees**: When leave is added for any employee, the system automatically deducts the corresponding leave days from their balance and immediately updates the displayed data
+    - **REAL-TIME UI updates for ALL employees**: Leave balance displays, progress bars, and remaining days counters update immediately after leave addition for every employee without manual refresh
+    - **BULLETPROOF leave record creation**: Backend creates leave records correctly for all employees with proper validation and error handling
+    - **ENHANCED error handling for ALL employees**: Comprehensive error handling that provides clear Greek error messages if leave addition fails for any employee, with specific feedback for different failure scenarios
+    - **GUARANTEED leave synchronization**: Leave records are immediately synchronized across calendar, payroll, and leave management sections for all employees
+    - **CONSISTENT validation for ALL employees**: Leave validation (preventing exceeding available balance) works uniformly for all employees with clear Greek error messages
+  - **Add leave days for any employee**: Interface to add leave days for any employee on specific dates with comprehensive validation
+  - **ENHANCED: Bulk leave addition for all employees**: New bulk leave functionality allowing users to add leave days for all employees simultaneously:
+    - **"Προσθήκη Άδειας σε Όλους" button**: Prominent button in the main LeavePage actions section for bulk leave addition
+    - **Bulk leave date picker dialog**: Interactive date picker dialog similar to individual leave dialog for selecting the leave date
+    - **All employees bulk leave processing**: Upon confirmation, automatically create leave day records for every employee in the system with the selected date
+    - **Bulk leave marking**: Mark each employee's selected date as leave (isLeave = true) in their work day records
+    - **Bulk leave balance deduction**: Automatically deduct 1 day from each employee's remaining leave balance
+    - **Immediate UI refresh after bulk leave**: Ensure the LeavePage UI reloads and shows updated leave balances and progress bars for all employees immediately after bulk leave addition
+    - **Bulk leave validation**: Comprehensive validation to ensure bulk leave operation doesn't exceed any employee's available leave balance
+    - **Bulk leave error handling**: Clear Greek error messages if bulk leave operation fails for any employee
+    - **Bulk leave success confirmation**: Success notification confirming bulk leave addition for all employees
+    - **ENHANCED: Employee type-aware bulk leave payroll integration**: 
+      - **For "Ωριαίος εργαζόμενος"**: Automatically integrate bulk leave days as 8 hours of normal work for payroll calculations
+      - **For "Μηνιαίος εργαζόμενος"**: Leave days do not affect the fixed monthly salary but are tracked for leave balance purposes
+    - **Bulk leave calendar synchronization**: Automatically display bulk leave days as visual indicators in all employee calendar views
+  - **Automatic leave balance calculation**: System automatically calculates and deducts leave days from employee's total available annual leave days
+  - **Real-time leave balance display**: Instantly display updated balance of remaining leave days and progress (used vs total) without manual refresh
+  - **Leave day entry with date selection**: Interactive date picker for selecting leave dates with proper validation
+  - **Employee selection for leave entry**: Dropdown or selection interface to choose which employee to add leave for
+  - **Leave balance tracking per employee**: Track individual leave balances for each employee with accurate calculations
+  - **Leave progress visualization**: Clear display showing used leave days vs total annual leave days for each employee
+  - **Leave history view**: Display all leave entries for each employee with dates and remaining balances
+  - **ENHANCED: Employee type-aware leave integration with payroll**: 
+    - **For "Ωριαίος εργαζόμενος"**: Leave days automatically count as 8 hours of normal work for payroll calculations
+    - **For "Μηνιαίος εργαζόμενος"**: Leave days do not affect the fixed monthly salary but are tracked for leave balance purposes
+  - **Leave visual display in calendar**: Leave days are automatically displayed as visual indicators in employee calendar views
+  - **Automatic backend recalculation**: Backend immediately recalculates payroll and leave totals after leave entry
+  - **Real-time UI updates**: Frontend automatically updates leave balances and payroll displays without requiring page refresh
+  - **Leave validation**: Prevent adding leave days that exceed available balance with clear Greek error messages
+  - **Leave editing and deletion**: Ability to modify or remove existing leave entries with proper validation
+  - **Leave synchronization**: Leave entries are synchronized across all relevant views (calendar, payroll, leave tracking)
+  - **ENHANCED: Automatic calendar-triggered leave integration**: When work days are marked as leave from calendar or bulk entry:
+    - **Automatic leave record creation from calendar**: Backend automatically creates leave records when work days are marked as leave in calendar views
+    - **Immediate leave balance updates from calendar**: Leave balances are immediately updated when leave is marked in calendar or bulk entry
+    - **Real-time leave page refresh from calendar actions**: Leave section automatically refreshes to show updated balances when leave is marked from calendar views
+    - **Seamless calendar-leave synchronization**: Leave records created from calendar actions are immediately synchronized across all leave management views
+- **Enhanced leave balance updates with guaranteed accuracy**: Leave balances update automatically when leave is recorded with proper error handling and instant UI refresh
+- **ENHANCED: Employee type-aware leave as work hours integration**: 
+  - **For "Ωριαίος εργαζόμενος"**: Seamless integration of leave days as work hours in payroll calculations with automatic recalculation
+  - **For "Μηνιαίος εργαζόμενος"**: Leave days tracked for balance purposes without affecting fixed monthly salary calculations
+- **ENHANCED: Leave visual display in calendar**: Leave days are automatically displayed as visual indicators in the employee's calendar view with distinct styling and real-time synchronization
+- **Real-time synchronization**: Immediate reflection of leave balance changes across all relevant views including calendar visual display and payroll calculations
+
+### Navigation Structure
+- Main navigation between six sections with enhanced stability and error handling:
+  - **Εργαζόμενοι** (Employee Management)
+  - **Μηνιαίοι Μισθοί Τράπεζας** (Monthly Bank Salaries Management)
+  - **Ημερολόγιο Εργαζομένων** (Work Hours Calendar)
+  - Μισθοδοσία (Payroll)
+  - **GUARANTEED: Always accessible Πληρωμές (Payments)**: Payments tab always appears in main navigation and opens without conditional rendering or restrictions
+  - **FULLY OPERATIONAL: Άδειες (Leave)**: Complete leave management functionality that is fully operational and always available
+
+## Data Storage
+The backend must store with enhanced reliability and comprehensive error handling:
+- **FULLY STABILIZED: Employee records storage with GUARANTEED instant availability, bulletproof data persistence, and employee type support**: Enhanced employee data operations for instant form availability and flawless functionality:
+  - **INSTANT actor availability**: Backend actor is immediately available for ALL operations without any initialization delays
+  - **GUARANTEED single-submission success with bulletproof communication**: Employee creation succeeds completely on the FIRST form submission attempt with enhanced backend communication protocols
+  - **ENHANCED: Complete data integrity for ALL fields including employee type with enhanced validation**: ALL employee fields (Όνομα, Τύπος Εργαζομένου, Ωριαία Αμοιβή/Μηνιαίος Μισθός, Αμοιβή Υπερωριών, Συνολικές Ημέρες Άδειας, Email, Τηλέφωνο, IBAN) are stored accurately and completely with comprehensive validation
+  - **ENHANCED: Employee type storage and validation**: Store employee type ("monthly" or "hourly") with proper validation and conditional field handling
+  - **ENHANCED: Conditional salary field storage**: Store either hourly rate (for hourly employees) or monthly salary (for monthly employees) based on employee type selection
+  - **BULLETPROOF decimal value processing with enhanced parsing and Float conversion**: Enhanced parsing, normalization, and storage of decimal values (hourly rates, overtime rates, monthly salary) with exact precision maintenance:
+    - **Enhanced string normalization with robust comma-to-dot conversion**: Bulletproof string replacement that converts comma-separated decimals to dot format before Float conversion with comprehensive error handling and validation
+    - **Enhanced parseFloat implementation**: Enhanced parseFloat logic that properly processes positive decimal values like "9.5", "10.5" without rejection or parsing failures
+    - **GUARANTEED precision maintenance**: Maintains exact decimal precision for values like 8.84, 6.75, 10.50 with perfect storage and retrieval
+    - **Enhanced validation with zero-prevention**: Validates decimal format and provides clear Greek error messages for invalid inputs while implementing failsafe parsing that prevents crashes on malformed input
+    - **PREVENTS decimal values from being zeroed out during parsing process**: Enhanced error handling that maintains original values when parsing fails, with fallback mechanisms and proper error reporting
+    - **Proper Float type storage with validation**: Ensures hourly rate, overtime rate, and monthly salary are stored as Float type in backend data structures with comprehensive type validation and conversion verification
+    - **Fixed validation logic**: Corrected overly restrictive validation that incorrectly rejected valid positive decimals, ensuring proper acceptance of values like "9,5" or "9.5"
+  - **INSTANT data synchronization with immediate availability**: Employee records are immediately available across ALL application components after creation with all fields populated correctly and instant UI updates
+  - **BULLETPROOF "addEmployee" backend function with optimized communication**: Backend `addEmployee` function handles form submissions reliably with optimized communication protocols, immediate response, and ensures EVERY submission results in successful employee creation
+  - **GUARANTEED employee initialization with complete backend data setup and automatic calendar availability**: Newly created employees have their salary and leave data properly initialized and are immediately available for work hours entry and payroll calculations:
+    - **Automatic backend data structure initialization**: Backend `addEmployee` function automatically creates and initializes ALL necessary data structures (calendar entries, work day templates, leave records, payroll calculation foundations) for ALL employees
+    - **Complete backend system linkage**: Proper associations between employee records and ALL related backend systems (work days, payroll, leave tracking) are automatically established during employee creation
+    - **IMMEDIATE calendar data availability**: Employee calendar data is immediately available for the calendar component queries without requiring ANY additional initialization
+    - **Complete payroll system integration**: Employees are immediately integrated into ALL payroll calculation systems with proper data foundations
+  - **Automatic React Query cache invalidation with instant UI updates**: Backend mutation success triggers automatic invalidation of relevant React Query caches to ensure immediate UI updates with instant employee list refresh
+  - **Enhanced employee card data storage with instant display**: All employee details including correct decimal wage values and employee type are properly stored and retrieved for comprehensive employee card display with immediate UI reflection
+  - **Automatic payroll and leave system initialization with instant integration**: Backend automatically initializes payroll calculations and leave balance systems immediately after employee creation based on saved employee data with correct decimal wage values and instant system integration
+  - **GUARANTEED employee data synchronization**: ALL added employees immediately appear in the employee list and their data (salary, hours, leave) are correctly synced with payroll and time-entry features without delays or missing information
+  - **IMMEDIATE refresh of ALL relevant data views**: Backend automatically triggers refresh of employee list, calendar views, and payroll displays after successful employee addition to show the new employee data immediately
+- **Guaranteed data consistency with instant availability**: Immediate data availability after all create/update operations with proper synchronization and instant UI updates
+- **PERFECT employee-workday-payroll linkage with ENHANCED employee support and instant integration**: Ensures proper associations between employee records, work day entries, and payroll calculations, preventing broken references or missing data links for ALL employees:
+  - **Automatic employee backend setup**: Backend automatically creates ALL necessary data structures and associations for ALL employees during the `addEmployee` operation
+  - **IMMEDIATE calendar component integration**: Employee data is immediately available for calendar component queries and operations
+  - **Complete system initialization**: ALL related systems (work hours, payroll, leave tracking) are automatically initialized and linked for ALL employees
+  - **INSTANT system integration**: ALL employees are immediately integrated into ALL application systems without requiring additional setup or initialization
+- **ENHANCED: Monthly Bank Salary Records with open access authorization**: Robust storage and retrieval of month-specific bank salaries with open access for editing and deletion:
+  - **Open access monthly bank salary editing**: Backend `updateMonthlyBankSalary` function allows all users to modify existing monthly bank salary entries without admin-only restrictions
+  - **Open access monthly bank salary deletion**: Backend `deleteMonthlyBankSalary` function allows all users to remove monthly bank salary entries without admin-only restrictions
+  - **Comprehensive validation for all users**: Full validation for monthly bank salary operations available to all users with proper error handling
+  - **Automatic payroll recalculation after modifications**: Backend automatically triggers payroll recalculation after monthly bank salary edits or deletions
+  - **Real-time data synchronization**: Monthly bank salary changes are immediately synchronized across all payroll calculations and displays
+  - **Enhanced decimal processing**: Bulletproof handling of decimal bank salary values with comma/dot separator support
+  - **Instant data availability**: Monthly bank salary updates are immediately available across all application views after successful processing
+- **ENHANCED: Bulk Monthly Bank Salary Storage with comprehensive validation and instant payroll synchronization**: Enhanced backend storage system for bulk bank salary operations:
+  - **Bulk bank salary processing function**: Backend function to handle bulk `setMonthlyBankSalary` calls for all employees simultaneously
+  - **Comprehensive bulk validation**: Backend validates all bulk bank salary entries with proper error handling and rollback mechanisms
+  - **Atomic bulk operations**: Ensure all bulk bank salary updates succeed or fail together to maintain data consistency
+  - **Immediate payroll recalculation trigger**: Backend automatically triggers payroll recalculation after bulk bank salary updates
+  - **Real-time data synchronization**: Bulk bank salary changes are immediately synchronized across all payroll calculations and displays
+  - **Enhanced decimal processing for bulk operations**: Bulletproof handling of decimal bank salary values in bulk operations with comma/dot separator support
+  - **Bulk operation error handling**: Comprehensive error handling for bulk bank salary operations with clear error reporting
+  - **Instant data availability**: Bulk bank salary updates are immediately available across all application views after successful processing
+- **ENHANCED: Work day storage with bulletproof validation, employee support, employee type awareness, instant availability, automatic payroll recalculation, calendar synchronization, automatic leave integration, and enhanced daily bulk entry with automatic data retrieval**: Enhanced work day recording system that ensures reliable storage, retrieval, automatic calendar display synchronization, automatic leave record creation, and enhanced daily bulk entry with automatic data retrieval and update handling:
+  - **Bulletproof work day persistence with instant confirmation**: Work day entries (normal hours, overtime hours, leave status) are reliably stored with comprehensive validation, error prevention, and instant confirmation
+  - **ENHANCED: Employee type-aware work day storage**: Store work day data appropriately based on employee type:
+    - **For "Ωριαίος εργαζόμενος"**: Store normal hours and overtime hours with decimal precision
+    - **For "Μηνιαίος εργαζόμενος"**: Store work day presence (present/absent) and overtime hours
+  - **Accurate work day retrieval with instant loading**: Stored work day data is correctly loaded and displayed across all calendar views with instant loading
+  - **Error-free work day modifications with instant updates**: Existing work day entries can be updated without data corruption, duplication, or loss, with instant UI updates
+  - **ENHANCED: Immediate work day availability with instant synchronization and calendar display**: Saved work day data is instantly available across individual and bulk calendar views with immediate synchronization and automatic visual display in calendar components
+  - **Perfect date-employee association with instant validation**: Ensures proper linking between work day entries and their corresponding employee and date with instant validation
+  - **ENHANCED: Automatic payroll recalculation, calendar synchronization, and leave integration trigger with guaranteed execution**: Backend automatically triggers payroll recalculation, calendar display updates, and leave record creation after both individual and bulk work day operations, with enhanced real-time synchronization ensuring payroll data, calendar visual indicators, and leave records are updated and available
+  - **ENHANCED: Bulk work day storage with complete record accuracy, crash prevention, instant confirmation, calendar synchronization, leave integration, and automatic data retrieval**: Ensures all employee work hours from bulk operations are correctly stored without missing or incorrect records, with comprehensive validation, error prevention, crash prevention during bulk save operations, instant confirmation, automatic calendar visual display updates, automatic leave record creation for work days marked as leave, and enhanced automatic data retrieval for date-based bulk entry:
+    - **ENHANCED: Automatic work day data retrieval for bulk entry**: Backend provides comprehensive query functions to retrieve existing work day records for all employees for a specific date:
+      - **Date-based work day queries**: Backend function to retrieve all work day records for a specific date across all employees
+      - **Employee-specific work day retrieval**: Backend returns work day data organized by employee for easy frontend processing
+      - **Complete work day data provision**: Backend provides all work day fields (normal hours, overtime hours, leave status) for each employee
+      - **Efficient bulk data queries**: Optimized backend queries that retrieve work day data for all employees in a single operation
+      - **Real-time data accuracy**: Retrieved work day data reflects the most current saved information for the selected date
+    - **ENHANCED: Update handling for existing work day records**: Backend properly handles updates to existing work day records during bulk save operations:
+      - **Record update instead of duplication**: Backend updates existing work day records instead of creating duplicates when saving bulk work hours for dates with existing data
+      - **Seamless data modification**: Backend allows modification of previously saved work hours without data conflicts or integrity issues
+      - **Consistent data relationships**: Updated work day records maintain proper relationships with employee records and payroll calculations
+      - **Automatic conflict resolution**: Backend handles potential data conflicts gracefully during bulk update operations
+      - **Comprehensive update validation**: Backend validates all update operations to ensure data integrity and consistency
+  - **Enhanced decimal hour validation with instant feedback**: Comprehensive backend validation for fractional work hours (8.5, 8.75, etc.) with proper comma/dot separator parsing, error handling, and instant feedback
+  - **ENHANCED: Bulk integration with proper error handling, execution, calendar synchronization, leave integration, and automatic data retrieval**: Ensures the bulk backend function correctly processes bulk work hour submissions with comprehensive validation, payroll recalculation trigger, calendar display synchronization, leave record creation for leave-marked work days, instant execution, and automatic data retrieval for pre-filling
+  - **ENHANCED: Calendar display data integration**: Backend ensures all work day entries are properly formatted and available for calendar visual display components with automatic synchronization
+  - **ENHANCED: Automatic leave record creation from work day operations**: Backend automatically creates leave records when work days are marked as leave (`isLeave = true`) in both individual and bulk operations:
+    - **Leave record creation trigger**: Backend detects when work days are marked as leave and automatically creates corresponding leave records
+    - **Leave balance deduction**: Automatically deducts leave days from employee's available leave balance when work days are marked as leave
+    - **Leave synchronization**: Ensures leave records created from work day operations are immediately synchronized with leave management system
+    - **Leave page refresh trigger**: Backend triggers frontend leave page refresh to show updated balances after work day leave operations
+- **ENHANCED: Multiple PaymentRecord storage with payment date, composite keys, guaranteed accessibility, payment management operations, and record update logic**: Payment records support multiple entries per employee per month with comprehensive tracking, management, and proper record updating:
+  - **Enhanced PaymentRecord type with composite key support**: Includes `paymentDate : Text` field alongside existing payment data with support for multiple records per employee per month
+  - **Composite key storage system**: Backend uses employee ID, payment date, and month/year as composite keys to enable multiple payment entries per employee per month
+  - **Multiple payment processing**: Backend functions handle multiple payment records per employee per month with proper aggregation
+  - **Cumulative payment calculation**: Backend automatically sums all payments within the same month for payroll calculations
+  - **Date-specific payment queries**: Support for retrieving all payments for an employee within a specific month, sorted by date
+  - **Bulk payment processing with multiple entry support**: Backend function handles multiple payment records at once while maintaining date specificity
+  - **ENHANCED: Payment management operations with guaranteed functionality and record update logic**: Backend supports comprehensive payment record management with proper record updating:
+    - **FIXED: Payment editing with record update instead of duplication**: Backend `updatePayment` function updates existing payment records instead of creating new ones:
+      - **Record identification and update**: Backend identifies existing payment records by employee ID and payment date, then updates the existing record with new payment amounts
+      - **Prevent duplicate record creation**: Backend ensures that payment edits do not result in duplicate payment records for the same employee and date
+      - **Preserve original payment date**: Payment edits maintain the original payment date from the existing record
+      - **Data integrity during updates**: Backend maintains proper data relationships and validation while updating existing payment records
+      - **Atomic update operations**: Payment record updates are performed atomically to ensure data consistency
+      - **Update validation**: Comprehensive validation for payment update operations with proper error handling
+    - **Payment deletion with cleanup**: Backend `deletePayment` function removes payment records and triggers automatic payroll recalculation to update remaining balances
+    - **Payment retrieval by ID**: Backend functions to retrieve specific payment records for editing operations
+    - **ENHANCED: Automatic payroll recalculation after payment changes with SIMPLIFIED balance calculation**: Backend automatically triggers payroll recalculation after payment edits or deletions to ensure accurate remaining balance calculations using updated payment amounts, including SIMPLIFIED balance calculation
+    - **Payment operation error handling**: Comprehensive error handling for all payment management operations with clear error messages
+  - **ENHANCED: Payment queries with monthly aggregation and comprehensive employee coverage**: Support for filtering and retrieving payments by month with automatic cumulative totals and complete employee coverage:
+    - **Individual employee payment queries**: Retrieve all payments for a specific employee within a selected month with proper filtering
+    - **All employees payment aggregation**: Retrieve payment records for ALL employees simultaneously for a selected month, grouped by employee with proper aggregation
+    - **Independent aggregated queries**: All employees payment queries operate independently of any previous individual employee selections
+    - **Complete employee coverage in aggregated view**: Ensure all employees in the system are included in aggregated payment views regardless of previous selections
+    - **Employee-grouped payment data**: Backend provides payment data properly grouped by employee for frontend display
+    - **Combined totals calculation**: Backend calculates both individual employee totals and grand totals across all employees for aggregated views
+  - **Bulletproof payment records storage with multiple entry support**: Enhanced PaymentRecord storage supporting unlimited payments per employee per month with comprehensive validation and error handling
+  - **ENHANCED: Payroll recalculation trigger after payment changes with guaranteed execution and SIMPLIFIED balance calculation**: Backend automatically triggers payroll recalculation after payment records are added, modified, or deleted, ensuring remaining balances reflect updated payment amounts using cumulative payment totals, including SIMPLIFIED balance calculation
+- **FULLY OPERATIONAL: Complete leave records storage with real-time updates, guaranteed functionality, automatic calendar integration, automatic total leave days synchronization, and bulk leave support**: Comprehensive leave tracking data storage with full functionality, automatic integration with calendar operations, automatic synchronization with employee profile total leave days, and bulk leave processing:
+  - **ENHANCED: Automatic total leave days synchronization with employee profiles**: Backend automatically synchronizes leave tracking total leave days with employee profile data:
+    - **Employee profile integration**: Backend retrieves totalAnnualLeaveDays from employee records for leave balance calculations
+    - **Automatic synchronization on employee creation**: Backend automatically initializes leave tracking with total leave days from employee profile when new employees are added
+    - **Dynamic synchronization on employee modification**: Backend automatically updates leave tracking total leave days when employee profile totalAnnualLeaveDays field is modified
+    - **Real-time leave balance recalculation**: Backend automatically recalculates leave balances (used, remaining, total) when employee profile total leave days change
+    - **Consistent data integrity**: Backend ensures leave tracking total leave days always match employee profile totalAnnualLeaveDays values
+    - **Automatic backend synchronization triggers**: Backend automatically triggers leave balance updates when employee data changes
+  - **FIXED: Individual leave entry records storage with guaranteed reliability for ALL employees**: Enhanced leave record storage system that works correctly for every employee:
+    - **BULLETPROOF leave record creation for ALL employees**: Backend `addLeave` function creates leave records successfully for every employee regardless of their creation order, employee ID, or previous leave history
+    - **UNIVERSAL employee leave compatibility**: Leave record storage works reliably for all employees without special handling or initialization requirements based on employee position or previous interactions
+    - **GUARANTEED leave balance deduction for ALL employees**: Backend automatically deducts leave days from any employee's available balance when leave records are created, with immediate balance updates
+    - **CONSISTENT leave data processing**: All employees receive identical leave data processing behavior without variations based on their system position or previous leave records
+    - **ENHANCED leave record validation for ALL employees**: Comprehensive validation that works uniformly for all employees, preventing leave addition that exceeds available balance with clear error handling
+    - **IMMEDIATE leave data availability for ALL employees**: Leave records are instantly available across all application views for every employee after creation
+    - **ENHANCED: Employee type-aware leave-payroll integration for ALL employees**: 
+      - **For "Ωριαίος εργαζόμενος"**: Leave records automatically integrate with payroll calculations as 8 hours of normal work for all employees without exceptions
+      - **For "Μηνιαίος εργαζόμενος"**: Leave records are tracked for balance purposes without affecting fixed monthly salary calculations
+    - **REAL-TIME leave synchronization for ALL employees**: Leave records are immediately synchronized across calendar, payroll, and leave management sections for every employee
+  - **Leave entry records with instant storage**: Store individual leave entries with employee ID, date, and leave type with instant confirmation
+  - **ENHANCED: Bulk leave records storage with instant processing**: Store bulk leave entries for all employees simultaneously with comprehensive validation and instant confirmation
+  - **Leave balance tracking with real-time calculation**: Track remaining leave days for each employee with automatic calculation and instant updates
+  - **Leave history storage with instant retrieval**: Maintain complete history of all leave entries for each employee with instant access
+  - **ENHANCED: Employee type-aware leave integration with work day system**: 
+    - **For "Ωριαίος εργαζόμενος"**: Seamless integration between leave entries and work day records for payroll calculations
+    - **For "Μηνιαίος εργαζόμενος"**: Leave entries tracked for balance purposes without affecting fixed salary calculations
+  - **Leave balance recalculation with instant execution**: Automatic recalculation of leave balances after leave entries are added or modified
+  - **Leave validation with instant feedback**: Prevent leave entries that exceed available balance with instant validation and clear error messages
+  - **Leave synchronization with payroll and calendar**: Automatic synchronization of leave data with payroll calculations and calendar visual displays
+  - **Leave editing and deletion with instant updates**: Support for modifying or removing leave entries with instant balance recalculation
+  - **Leave progress tracking with real-time display**: Track and display leave usage progress (used vs total) for each employee with real-time updates
+  - **Leave backend triggers with guaranteed execution**: Backend automatically triggers payroll and calendar updates after leave operations
+  - **ENHANCED: Automatic leave record creation from calendar operations**: Backend automatically creates leave records when work days are marked as leave in calendar or bulk entry:
+    - **Calendar-triggered leave creation**: Backend detects leave-marked work days and automatically creates corresponding leave records
+    - **Automatic leave balance deduction from calendar**: Backend automatically deducts leave days from employee balance when work days are marked as leave
+    - **Leave page refresh trigger from calendar**: Backend triggers frontend leave page refresh after calendar-based leave operations
+    - **Calendar-leave synchronization**: Ensures leave records created from calendar operations are immediately synchronized with leave management system
+  - **ENHANCED: Bulk leave processing with comprehensive validation**: Backend supports bulk leave addition for all employees:
+    - **Bulk leave creation function**: Backend function to create leave records for all employees on a selected date
+    - **Bulk leave balance deduction**: Automatically deduct leave days from all employees' balances during bulk leave operations
+    - **Bulk leave validation**: Comprehensive validation to ensure bulk leave doesn't exceed any employee's available balance
+    - **Bulk leave error handling**: Proper error handling for bulk leave operations with clear error messages
+    - **ENHANCED: Employee type-aware bulk leave payroll integration**: 
+      - **For "Ωριαίος εργαζόμενος"**: Automatic integration of bulk leave days with payroll calculations for all affected employees
+      - **For "Μηνιαίος εργαζόμενος"**: Bulk leave days tracked for balance purposes without affecting fixed monthly salary calculations
+    - **Bulk leave calendar synchronization**: Automatic synchronization of bulk leave days with calendar visual displays for all employees
+- **ENHANCED: SIMPLIFIED payroll calculation backend with ACCURATE salary computation, employee type support, structured data processing, complete employee coverage, calendar synchronization, and SIMPLIFIED balance calculation**: Backend functions enhanced to support payroll updates with SIMPLIFIED and VERIFIED calculation logic, employee type awareness, automatic calendar display synchronization, and SIMPLIFIED balance calculation:
+  - **ENHANCED: Employee type-aware salary calculation with SIMPLIFIED balance calculation**: Backend CORRECTLY calculates salaries based on employee type with VERIFIED accuracy and SIMPLIFIED balance calculation:
+    - **For "Ωριαίος εργαζόμενος"**: (Normal Hours + Leave Hours) × Hourly Rate + Overtime Hours × Overtime Rate
+    - **For "Μηνιαίος εργαζόμενος"**: Fixed Monthly Salary + Overtime Hours × Overtime Rate
+  - **ENHANCED: PROPER rate retrieval and usage with employee type support**: Backend ensures stored hourly rates (for hourly employees), monthly salaries (for monthly employees), and overtime rates are CORRECTLY retrieved and used in calculations without being zeroed out or corrupted
+  - **Enhanced monthly bank fixed salary integration**: Backend properly retrieves and displays monthly bank fixed salary when set for specific employee and month
+  - **ENHANCED: Structured payroll data calculation with employee type support and SIMPLIFIED balance calculation**: Backend calculates and returns payroll data in the specific order required by the frontend display including employee type-aware calculations and SIMPLIFIED balance calculation:
+    - **Structured data provision for 10-column layout**: Backend provides all necessary data fields for the specific 10-column payroll summary table layout
+  - **Monthly bank salary retrieval**: Backend retrieves the specific monthly bank salary for each employee and month
+  - **ENHANCED: Cumulative payment totals aggregation with updated amounts**: Backend calculates total cash and bank payments by summing ALL payment records for each employee per month, using updated payment amounts after edits
+  - **ENHANCED: Remaining balance calculations with cumulative totals and SIMPLIFIED balance calculation**: Backend calculates both remaining real salary and remaining bank balance using updated cumulative payment totals with SIMPLIFIED balance calculation:
+    - **Remaining Real Salary**: Calculated as Total Monthly Salary − (Total Cash Payments + Total Bank Payments) using updated payment amounts
+    - **Remaining Bank Balance**: Calculated as Monthly Bank Fixed Salary − Total Bank Payments for the same month using updated payment amounts
+  - **ENHANCED: Employee type-aware hours analysis data**: Backend provides detailed breakdown based on employee type:
+    - **For "Ωριαίος εργαζόμενος"**: Regular, overtime, and leave hours for the selected month
+    - **For "Μηνιαίος εργαζόμενος"**: Work days present, overtime hours, and leave days for the selected month
+  - **ENHANCED: Payroll recalculation and calendar synchronization triggers with SIMPLIFIED balance calculation**: Backend includes enhanced triggers that recalculate payroll data and synchronize calendar displays whenever work hours, payments, or bank salaries are modified, with real-time data synchronization and SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: Real-time payroll data availability with calendar synchronization and SIMPLIFIED balance calculation**: Backend ensures payroll calculations and calendar display data are available after work hour, payment, or bank salary changes with enhanced synchronization mechanisms and SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: Complete employee coverage using getAllEmployeesPayrollData with SIMPLIFIED balance calculation**: Backend `getAllEmployeesPayrollData` function reliably retrieves and processes payroll data for ALL employees in the system without missing any records, ensuring complete employee coverage in payroll displays including SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: Calendar display data provision**: Backend provides properly formatted work day data for calendar visual display components with automatic synchronization
+- **ENHANCED: Real-time data synchronization with automatic payroll updates, calendar display synchronization, leave integration, SIMPLIFIED balance calculation, and instant availability**: Guaranteed availability of all stored data across all application views with payroll calculation updates, triggered automatically after work hour submissions, payment changes (including edits with updated amounts), and bank salary changes with enhanced real-time synchronization, automatic calendar visual display updates, automatic leave record creation and synchronization, and SIMPLIFIED balance calculation using updated payment amounts
+- **ENHANCED: Payroll computation data integrity with automatic recalculation, calendar synchronization, leave integration, SIMPLIFIED balance calculation, and instant validation**: Ensures all payroll calculations have proper data foundations, accurate date-based filtering, and work correctly for every employee without missing links, broken references, or incorrect zero values, with automatic recalculation triggered after work hour, payment (including edits with updated amounts), and bank salary changes, calendar display synchronization, leave record integration, SIMPLIFIED balance calculation using updated payment amounts, and instant validation
+- **Persistent Data Storage with Stable Variables and Instant Access**: All system data is stored using stable variables to ensure persistence across redeployments and updates:
+  - **ENHANCED: Stable employee storage with employee type support and instant access**: Employee records including employee type stored in stable variables to persist across upgrades with instant access
+  - **ENHANCED: Stable work day storage with instant retrieval and automatic data retrieval support**: Work day entries stored in stable variables to maintain work hour history with instant retrieval and enhanced support for automatic data retrieval for bulk entry pre-filling
+  - **ENHANCED: Stable payroll records storage with instant calculation and SIMPLIFIED balance calculation**: Payroll calculations stored in stable variables to preserve salary data with instant calculation and SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: Stable payment records storage with multiple entry support and record update logic**: Payment history stored in stable variables supporting multiple payments per employee per month with instant tracking, guaranteed accessibility, and proper record update logic to prevent duplication
+  - **FULLY OPERATIONAL: Stable leave records storage with instant updates, guaranteed functionality, calendar integration, automatic total leave days synchronization, and bulk leave support**: Leave tracking data stored in stable variables to preserve leave balances and history with instant updates, full operational capability, automatic integration with calendar operations, automatic synchronization with employee profile total leave days, and bulk leave processing support
+  - **ENHANCED: Stable monthly bank salary storage with open access and instant access**: Month-specific bank salaries stored in stable variables with open access for editing and deletion operations and instant access
+  - **ENHANCED: Stable bulk bank salary operation storage with instant processing**: Bulk bank salary operations stored in stable variables to ensure data consistency and instant processing
+  - **Stable counter storage with instant increment**: Employee ID counters and other system counters stored in stable variables with instant increment
+  - **Migration logic implementation with instant execution**: Backend includes migration logic to handle data structure changes during upgrades while preserving existing data and maintaining instant execution
+  - **Actor initialization with stable data and instant availability**: Proper reloading of stable data on actor initialization to ensure data availability after deployments with instant availability
+  - **Data consistency verification with instant validation**: Mechanisms to verify data integrity and consistency after upgrades and redeployments with instant validation
+
+## System Independence
+- **GUARANTEED: Employee Addition and Payroll System Independence**: The employee addition functionality and payroll calculation system operate independently without affecting each other:
+  - **Isolated backend operations**: Employee creation operations do not interfere with payroll calculation functions
+  - **Separate data handling**: Employee data storage and payroll computation use separate backend functions that do not conflict
+  - **Independent state management**: Frontend state management for employee forms and payroll displays operate independently
+  - **Non-blocking operations**: Employee addition does not block or interfere with payroll calculations and vice versa
+  - **Separate error handling**: Errors in one system do not affect the operation of the other system
+  - **Independent validation**: Employee form validation and payroll calculation validation operate separately
+  - **Isolated communication protocols**: Backend communication for employee operations and payroll operations use separate channels
+
+## User Interface
+- Modern, clean design using React and Tailwind CSS with enhanced performance and stability
+- **Direct application access**: Application loads directly into operational mode without any authentication screens or access restrictions
+- **FULLY STABILIZED: Employee Management Interface with GUARANTEED instant availability, bulletproof functionality, employee type support, and seamless user experience**:
+  - **Page header displays "Εργαζόμενοι"**: The main employees management page shows "Εργαζόμενοι" as the page title
+  - **INSTANT form availability**: Form opens immediately and is fully interactive without ANY initialization delays or blocking screens
+  - **Seamless user experience with instant interactivity**: Users can immediately start filling out form fields with ALL backend connections ready
+  - **ENHANCED: Complete field set with employee type selection and instant accessibility**: Form includes required and optional fields that are immediately accessible:
+    - **Όνομα (Name)** - required text field with instant validation
+    - **ENHANCED: Τύπος Εργαζομένου (Employee Type)** - required selection field with clear Greek labels:
+      - **"Μηνιαίος εργαζόμενος" (Monthly Employee)** option
+      - **"Ωριαίος εργαζόμενος" (Hourly Employee)** option
+    - **ENHANCED: Conditional salary fields with dynamic display**:
+      - **For "Μηνιαίος εργαζόμενος"**: **Μηνιαίος Μισθός (Monthly Salary)** - required decimal field with bulletproof comma/dot separator support
+      - **For "Ωριαίος εργαζόμενος"**: **Ωριαία Αμοιβή (Hourly Rate)** - required decimal field with bulletproof comma/dot separator support
+    - **Αμοιβή Υπερωριών (Overtime Rate)** - required decimal field with bulletproof comma/dot separator support (for both employee types)
+    - **Συνολικές Ημέρες Άδειας (Total Annual Leave Days)** - optional integer field
+    - **Email** - optional text field with proper email validation
+    - **Τηλέφωνο (Phone)** - optional text field
+    - **IBAN** - optional text field
+  - **ENHANCED: Dynamic form behavior based on employee type selection**: Form fields update dynamically when employee type is selected:
+    - **Immediate field visibility changes**: Salary fields appear/disappear instantly based on employee type selection
+    - **Proper field validation**: Only relevant salary field is validated based on selected employee type
+    - **Clear field labeling**: Field labels clearly indicate which employee type they apply to
+    - **Smooth transitions**: Field changes occur smoothly without jarring interface updates
+  - **FULLY STABILIZED: "Προσθήκη" button with GUARANTEED functionality and flawless operation**: The "Προσθήκη" button works perfectly on EVERY click:
+    - **Prominent blue button styling**: Clear visual prominence with blue color indicating interactivity and importance
+    - **INSTANT submission processing**: Form submission is processed immediately without delays or connection issues
+    - **BULLETPROOF backend communication**: GUARANTEED successful communication with backend through optimized protocols
+    - **ENHANCED decimal processing with perfect precision**: Flawless handling of decimal values with comma/dot separator support and accurate Float conversion
+    - **COMPREHENSIVE error recovery with seamless operation**: Automatic recovery from ANY issues without disrupting user experience
+    - **SINGLE-CLICK success guarantee**: Form submission succeeds completely on the FIRST button click attempt
+    - **ENHANCED: GUARANTEED data persistence for ALL fields including employee type**: ALL employee fields (name, employee type, hourly rate/monthly salary, overtime rate, email, phone, IBAN, leave days) are stored accurately with proper decimal number handling and validation
+  - **STABILIZED: Success and error toast notifications with Greek messages**:
+    - Success notification: "Ο εργαζόμενος προστέθηκε επιτυχώς!" with green styling and checkmark icon
+    - Error notifications with specific Greek messages for different error types
+    - Loading notification: "Αποθήκευση..." during save operation with spinner
+    - Network error: "Πρόβλημα δικτύου. Δοκιμάστε ξανά." with red styling
+    - Validation error: "Παρακαλώ ελέγξτε τα δεδομένα που εισάγατε." with orange styling
+    - Backend error: "Πρόβλημα με το σύστημα, δοκιμάστε ξανά" with red styling
+    - Toast notifications appear in consistent position with proper timing and dismissal options
+  - **GUARANTEED: Immediate employee list refresh and consistent display**: Upon successful employee addition, the employee list automatically refreshes and displays the new employee with ALL entered details correctly shown, ensuring immediate visibility without manual refresh
+  - **Comprehensive error handling with specific Greek feedback**: Display detailed, user-friendly error messages in Greek
+  - **GUARANTEED: Automatic UI synchronization with instant employee display**: Upon successful employee addition, new employee appears immediately in employee list with ALL entered details correctly displayed without page refresh
+  - **FULLY STABILIZED: Consistent behavior for ALL employees (first and subsequent)**:
+    - **NO automatic navigation**: Employee addition NEVER triggers automatic navigation to calendar views for ANY employee
+    - **IMMEDIATE calendar availability**: ALL employees' calendars become instantly available in "Ημερολόγιο Εργαζομένων" after addition
+    - **UNIFORM backend initialization**: Backend properly initializes ALL necessary data structures for EVERY employee consistently
+    - **IDENTICAL frontend handling**: Frontend treats ALL employee additions identically without special routing logic for the first employee
+  - **Optimized frontend-backend communication with seamless experience**: Enhanced communication protocols that prevent blocking and ensure consistent smooth experience throughout the entire process
+  - **GUARANTEED: Employee data synchronization**: ALL added employees immediately appear in the employee list and their data (salary, hours, leave) are correctly synced with payroll and time-entry features without delays or missing information
+  - **IMMEDIATE refresh of ALL relevant data views**: Frontend automatically refreshes employee list, calendar views, and payroll displays after successful employee addition to show the new employee data immediately without manual refresh
+  - **ENHANCED: Clean employee card display**: Employee cards display all employee information (name, employee type, salary/hourly rate, overtime rate, leave days, contact information) with clean layout and consistent styling, without any monthly bank salary management buttons or controls
+- **Monthly Bank Salary Management Interface (Μηνιαίοι Μισθοί Τράπεζας)**: Comprehensive dedicated interface for managing monthly bank salaries with three main sections:
+  - **Bulk Monthly Bank Salary Management Interface (Μαζική Προσθήκη Μηνιαίων Μισθών Τράπεζας)**: Enhanced bulk bank salary management interface for efficient monthly salary setup:
+    - **Month and year selection interface**: Clean interface to select the target month and year for bulk bank salary entry with proper date picker or dropdown controls
+    - **All employees table display**: Comprehensive table listing all employees in the system with clear employee names and input fields for monthly bank salary amounts
+    - **Decimal bank salary input fields**: Each employee row contains a validated input field for bank salary amount with bulletproof comma/dot separator support, precision validation, and proper Greek formatting
+    - **Enhanced validation interface**: Comprehensive validation for all bulk bank salary entries with clear Greek error messages displayed inline or as toast notifications
+    - **"Αποθήκευση Όλων" (Save All) button**: Prominent bulk save button with clear Greek labeling and consistent styling that updates the backend using bulk calls to `setMonthlyBankSalary` for all employees at once
+    - **Loading states and progress indication**: Proper loading states during bulk save operations with progress indication and user feedback
+    - **Success and error notifications**: Comprehensive success confirmation and error handling with clear Greek messages after bulk save operations
+    - **Immediate payroll synchronization interface**: Instant reflection of bulk bank salary entries in payroll calculations with automatic payroll recalculation and real-time UI updates across all related sections
+    - **Consistent styling with existing pages**: All interface elements maintain consistent styling, spacing, and design patterns with existing application pages
+    - **Responsive design**: Bulk bank salary interface adapts properly to different screen sizes while maintaining usability and readability
+    - **Real-time data updates**: Bulk bank salary changes are immediately reflected across all payroll views without requiring manual refresh
+    - **Form validation and error prevention**: Comprehensive form validation that prevents invalid entries and provides clear feedback to users
+    - **Accessibility features**: Proper accessibility features including keyboard navigation, screen reader support, and clear focus indicators
+  - **Individual Monthly Bank Salary Management Interface (Ατομική Προσθήκη Μηνιαίων Μισθών Τράπεζας)**: Individual bank salary management interface:
+    - **Employee selection dropdown**: Clean dropdown interface to select individual employees for bank salary entry with proper search and filtering capabilities
+    - **Month and year selection interface**: User-friendly interface to select the target month and year for individual bank salary entry with date picker controls
+    - **Individual bank salary input field**: Validated input field for bank salary amount with bulletproof comma/dot separator support, precision validation, and proper Greek formatting
+    - **Enhanced validation interface**: Comprehensive validation for individual bank salary entries with clear Greek error messages and real-time validation feedback
+    - **"Αποθήκευση" (Save) button**: Prominent save button with clear Greek labeling and consistent styling that updates the backend using `setMonthlyBankSalary` for the selected employee
+    - **Loading states during save**: Proper loading states during save operations with user feedback and progress indication
+    - **Success and error notifications**: Comprehensive success confirmation and error handling with clear Greek messages after save operations
+    - **Immediate payroll synchronization interface**: Instant reflection of individual bank salary entries in payroll calculations with automatic payroll recalculation and real-time UI updates
+    - **Form reset after successful save**: Automatic form reset after successful save to allow for easy entry of additional bank salaries
+    - **Consistent styling and layout**: All interface elements maintain consistent styling, spacing, and design patterns with existing application forms
+    - **Responsive form design**: Individual bank salary form adapts properly to different screen sizes while maintaining usability
+    - **Clear field labeling**: All form fields have clear Greek labels and helpful placeholder text
+    - **Accessibility features**: Proper accessibility features including keyboard navigation, screen reader support, and clear focus indicators
+  - **Monthly Bank Salary View Interface (Προβολή Μηνιαίων Μισθών Τράπεζας)**: Comprehensive view interface for all monthly bank salaries:
+    - **All monthly bank salaries table**: Clean, organized table displaying all monthly bank salaries by employee, month, and year with proper column headers
+    - **Employee-based organization**: Data organized by employee with clear employee identification and proper grouping for easy navigation
+    - **Month and year display columns**: Clear display columns showing month and year for each bank salary entry with proper Greek formatting
+    - **Bank salary amount display column**: Clear display column showing bank salary amounts with proper Greek number formatting and currency symbols
+    - **Comprehensive data retrieval**: Uses backend `getMonthlyBankSalary` query to retrieve all monthly bank salary data with proper error handling
+    - **Real-time data updates**: Table automatically updates when bank salary data changes through React Query invalidation and real-time synchronization
+    - **Responsive table design**: Table adapts to different screen sizes with proper column sizing, text wrapping, and horizontal scrolling when necessary
+    - **Greek UI labels and headers**: All table headers, labels, and interface text use proper Greek terminology and formatting
+    - **Data filtering and sorting options**: User-friendly options to filter and sort bank salary data by employee, month, or year with intuitive controls
+    - **Empty state handling**: Proper display and messaging when no monthly bank salary data exists with helpful guidance for users
+    - **Loading states**: Proper loading indicators while data is being retrieved with user feedback
+    - **Error handling**: Comprehensive error handling with clear Greek error messages when data retrieval fails
+    - **Pagination support**: If needed, proper pagination controls for large datasets with clear navigation
+    - **Export functionality**: Optional export capabilities for bank salary data with proper formatting
+    - **Search functionality**: Search capabilities to quickly find specific employee bank salary records
+    - **Consistent styling**: All interface elements maintain consistent styling with existing application tables and views
+    - **ENHANCED: Monthly bank salary editing and deletion interface with open access**: Full editing and deletion interface for monthly bank salary entries:
+      - **Edit monthly bank salary buttons**: Action buttons beside each bank salary entry with consistent styling (Greek label "Επεξεργασία", appropriate edit icon) that open edit dialogs
+      - **Delete monthly bank salary buttons**: Action buttons beside each bank salary entry with consistent styling (Greek label "Διαγραφή", appropriate delete icon) that trigger deletion workflow
+      - **Edit monthly bank salary dialog**: Modal dialog for editing existing monthly bank salary entries with pre-filled data and comprehensive validation
+      - **Delete confirmation dialog**: Confirmation modal with Greek text asking for deletion confirmation before proceeding
+      - **Open access for all users**: Both edit and delete operations are available to all users without admin-only restrictions or authorization checks
+      - **Automatic payroll recalculation interface**: Interface updates automatically reflect payroll recalculation after monthly bank salary edits or deletions
+      - **Real-time UI updates**: Interface automatically refreshes to show updated data after monthly bank salary modifications
+      - **Comprehensive validation interface**: Full validation for edit operations with clear Greek error messages and real-time feedback
+      - **Success and error notifications**: Clear Greek success and error messages for both edit and delete operations
+      - **Consistent UI styling**: Edit and delete buttons and dialogs use consistent styling with existing application patterns
+- **ENHANCED: Work Hours Calendar Interface with bulletproof functionality, employee type awareness, automatic calendar synchronization, visual hour display, automatic leave integration, crash prevention, and enhanced daily bulk entry with automatic data retrieval and pre-filling**:
+  - **ENHANCED: Date selection for both views with comprehensive error prevention, crash prevention, and automatic calendar synchronization**: 
+    - **Bulletproof date picker with white screen and crash prevention**: Robust date picker with enhanced stability and error handling that prevents white screens, blank pages, application crashes, and UI freezing when selecting different dates
+    - **Guaranteed smooth date navigation with proper state management**: Date selection mechanism that works reliably without causing page reloads, interface freezing, or crashes when switching between dates
+    - **ENHANCED: Immediate data synchronization with crash prevention and calendar display**: Automatic refresh of employee work data when date is changed with proper loading states, error boundaries, crash prevention mechanisms, and automatic calendar visual display updates
+    - **Employee calendar automatic initialization**: Calendar component automatically detects and initializes for ALL employees immediately after employee creation without requiring manual setup or page refresh
+  - **ENHANCED: Employee type-aware work hours entry for ALL employees with automatic payroll recalculation, calendar synchronization, visual hour display, automatic leave integration, crash prevention, enhanced decimal validation, and enhanced daily bulk entry with automatic data retrieval**: 
+    - **ENHANCED: Error-free individual work hours entry with employee type support and automatic updates**: Individual calendar view allows reliable entry and modification of work hours based on employee type without interface errors or data loss:
+      - **For "Ωριαίος εργαζόμενος"**: Normal work hours and overtime hours entry with decimal validation
+      - **For "Μηνιαίος εργαζόμενος"**: Work day presence tracking and overtime hours entry
+      - Backend payroll recalculation trigger, frontend payroll UI updates, automatic calendar visual display synchronization, immediate reflection of entered hours as visual indicators in the calendar, and automatic leave record creation when work days are marked as leave
+    - **Enhanced decimal validation for work hours**: Comprehensive validation for fractional hour entries (8.5, 8.75, 8.9) with support for comma/dot separators and clear Greek error messages
+    - **ENHANCED: Employee type-aware bulk work hours entry with GUARANTEED payroll synchronization and automatic data retrieval with pre-filling**: Bulk entry view processes all employee work hours correctly based on employee type without errors, data corruption, partial failures, or crashes, with enhanced automatic data retrieval and pre-filling functionality:
+      - **ENHANCED: Automatic data retrieval and pre-filling for selected date**: When a date is selected in the bulk entry view, the system automatically retrieves and displays previously saved work hours for all employees:
+        - **Automatic work hours retrieval**: Frontend automatically queries backend to retrieve existing work day records for all employees for the selected date
+        - **Form field pre-filling**: Input fields are automatically populated with previously saved normal hours and overtime hours for each employee
+        - **Employee type-aware pre-filling**: Pre-filling respects employee type differences:
+          - **For "Ωριαίος εργαζόμενος"**: Pre-fill normal hours and overtime hours fields with saved values
+          - **For "Μηνιαίος εργαζόμενος"**: Pre-fill work day presence status and overtime hours with saved values
+        - **Leave status pre-filling**: Automatically display leave status for employees who have leave marked for the selected date
+        - **Real-time data loading**: Previously saved data loads immediately when date is selected without delays or loading screens
+        - **Consistent data accuracy**: Pre-filled data exactly matches the stored work day records for the selected date
+        - **Empty state handling**: For dates with no previously saved data, form fields remain empty and ready for new input
+        - **Seamless data modification**: Users can modify pre-filled values and save updates without data conflicts or duplication
+      - **ENHANCED: Update handling for existing records**: When saving bulk work hours for a date that already has saved data:
+        - **Record update instead of duplication**: Frontend and backend coordinate to update existing work day records instead of creating duplicates
+        - **Seamless data modification interface**: Users can modify previously saved hours and save updates without conflicts or error messages
+        - **Consistent data integrity**: Updated records maintain proper data relationships and validation in the user interface
+        - **Automatic conflict resolution**: Interface handles potential data conflicts gracefully during updates with clear user feedback
+      - **For "Ωριαίος εργαζόμενος"**: Normal hours and overtime hours input fields with automatic pre-filling
+      - **For "Μηνιαίος εργαζόμενος"**: Work day presence checkbox and overtime hours input field with automatic pre-filling
+      - Automatically triggers backend payroll recalculation, ensures frontend hooks and components trigger updates of both payroll UI and calendar visual displays right after hour submissions while preventing crashes and white screens, and automatically creates leave records for employees marked as leave in bulk operations
+    - **Enhanced bulk save with complete record accuracy, crash prevention, calendar synchronization, leave integration, confirmation, and update handling**: Ensures all employee work hours from bulk operations are correctly saved without missing or incorrect records, crashes, or white screens, with immediate visual confirmation, automatic payroll refresh, automatic calendar visual display updates, automatic leave record creation for work days marked as leave, and proper handling of updates to existing records
+    - **Immediate data persistence with crash prevention**: Work hours are saved instantly and correctly to backend storage without causing crashes
+    - **ENHANCED: Real-time data refresh with payroll updates, calendar synchronization, leave integration, and crash prevention**: Work hour changes are reflected across all views without requiring page refresh, with automatic payroll UI updates, calendar visual display synchronization, leave record creation and synchronization, and crash prevention mechanisms
+    - **ENHANCED: Automatic payroll update, calendar synchronization, and leave integration trigger with real-time UI synchronization and crash prevention**: Frontend automatically triggers payroll recalculation, calendar display updates, and leave record creation after successful bulk save operations and ensures payroll display, calendar visual indicators, and leave page updates while preventing crashes and white screens
+    - **White screen and page reload prevention with enhanced stability**: Comprehensive error handling that prevents white screens, blank pages, page reloads, and crashes during work hours entry operations, especially during date changes in bulk entry view
+    - **Fixed bulk entry date change handling with crash prevention**: Ensures that when users select different dates in the bulk work hours entry view, the application correctly updates the selected date and loads appropriate records without crashing, showing white screens, or freezing
+    - **Employee calendar automatic availability**: Calendar component automatically loads and displays employee calendar data immediately after employee creation, ensuring immediate work hours entry capability
+    - **ENHANCED: Visual hour indicators in calendar**: All entered work hours (normal, overtime) and leave days are automatically displayed as visual indicators in the employee's calendar view with distinct styling and immediate synchronization
+    - **ENHANCED: Automatic leave page refresh from calendar actions**: When work days are marked as leave in calendar views, the Leave section automatically refreshes to show updated balances without manual refresh
+  - **ENHANCED: Perfect synchronization with payroll updates, calendar display synchronization, leave integration, crash prevention, and real-time UI refresh**: Updates across all calendar views with proper validation, payroll calculation refresh, automatic calendar visual display updates, leave record creation and synchronization, with frontend components ensuring automatic payroll UI updates while preventing crashes and automatic calendar initialization for ALL employees
+  - **Bulletproof individual calendar rendering with ENHANCED employee support and automatic initialization**: Ensures the individual work hours entry calendar appears correctly for EVERY employee, including newly added ones, with automatic calendar component initialization and immediate availability
+  - **ENHANCED: GUARANTEED bulk entry payroll, calendar, and leave synchronization with real-time UI updates, crash prevention, confirmation, and automatic data retrieval**: Ensures payroll displays, calendar visual indicators, and leave balances are updated after bulk work hours entry without requiring manual page refresh, with enhanced frontend hooks and components triggering payroll UI refresh, calendar display updates, and leave page refresh while providing visual confirmation of successful updates and preventing crashes and white screens, plus automatic data retrieval and pre-filling for enhanced user experience
+  - **Responsive UI during operations with enhanced stability**: Interface remains responsive and provides proper feedback during work hours entry operations without white screens, freezing, or crashes, especially during date changes and bulk save operations
+  - **ENHANCED: Calendar visual hour display**: Calendar component displays clear visual indicators for:
+    - **Normal work hours**: Distinct visual styling showing the number of normal hours worked on each date
+    - **Overtime hours**: Separate visual styling showing overtime hours with different color or styling
+    - **Leave days**: Clear visual indication of leave days with appropriate styling
+    - **Real-time visual updates**: Visual indicators update immediately when hours are entered or modified through any method
+    - **Persistent visual display**: Visual indicators remain displayed across page reloads and navigation
+- **GUARANTEED: Always accessible Payments Interface with unconditional availability and comprehensive functionality**:
+  - **GUARANTEED: Unconditional PaymentsPage access**: PaymentsPage always loads and displays both individual and bulk payment functionality regardless of navigation state, loaded data, or page context
+  - **Always visible payment modes**: Both individual and bulk payment entry sections are permanently visible and accessible on the PaymentsPage without conditional rendering
+  - **Individual Payment Entry Interface (Ατομική Καταχώρηση Πληρωμής) with guaranteed accessibility and date picker functionality**:
+    - **Always accessible individual payment section**: Individual payment entry is permanently visible and functional on the PaymentsPage regardless of application state
+    - **Interactive payment date picker**: Robust date picker field supporting DD-MM-YYYY format with comprehensive error handling, always functional
+    - **Seamless form integration**: Date picker integrates smoothly with existing payment form without disrupting layout, always available
+    - **Payment date storage**: Selected payment date is saved in the backend as the `paymentDate` field, always functional
+    - **Payment date display**: Saved payment date is clearly displayed in payment history and editing dialogs, always accessible
+    - **Consistent date handling**: Date picker functionality works reliably for both cash and bank payment entries, always reliable
+    - **Enhanced decimal input handling**: Bulletproof processing of decimal payment amounts with comma/dot separator support, always functional
+    - **Comprehensive validation**: Full validation for payment date selection with clear Greek error messages, always active
+    - **ENHANCED: Immediate payroll synchronization with SIMPLIFIED balance calculation**: Instant reflection of individual payment entries in payroll calculations with automatic payroll recalculation and real-time UI updates, always functional, including SIMPLIFIED balance calculation
+    - **Multiple payments per employee support**: Allow adding multiple individual payments for the same employee in the same month with different dates, always functional
+  - **Bulk Payment Entry Interface (Μαζική Καταχώρηση Πληρωμών) with guaranteed accessibility**: Feature for entering payments for all employees at once, always accessible:
+    - **Always accessible bulk payment section**: Bulk payment entry is permanently visible and functional on the PaymentsPage regardless of application state
+    - **Robust date picker**: Interactive date picker with comprehensive error handling for payment date selection, always functional
+    - **All employees payment table**: Clean table layout showing all employees with input fields for cash and bank payments, always available
+    - **Enhanced decimal input handling**: Bulletproof processing of decimal payment amounts with comma/dot separator support, always functional
+    - **Save All functionality**: Reliable bulk save operation with comprehensive validation and error handling, always accessible
+    - **ENHANCED: Immediate payroll synchronization with SIMPLIFIED balance calculation**: Instant reflection of bulk payment entries in payroll calculations with automatic payroll recalculation and real-time UI updates, always functional, including SIMPLIFIED balance calculation
+    - **Multiple bulk payments support**: Allow adding multiple bulk payment entries for different dates within the same month, always functional
+  - **ENHANCED: Payment history and management interface with monthly aggregation, comprehensive employee selection, and payment record management**: Comprehensive payment viewing and management with enhanced employee filtering and direct payment record actions:
+    - **Employee selection dropdown**: Dropdown selector to choose between:
+      - Individual employees (showing only that employee's payments)
+      - "Όλοι οι εργαζόμενοι" (All employees) option to view all employees' payments
+    - **Individual employee view**: When a specific employee is selected:
+      - Show only that employee's payment records for the selected month
+      - Display individual payment details with dates, cash amounts, and bank amounts
+      - Show cumulative monthly totals for that employee only
+      - Maintain chronological sorting by payment date
+    - **ENHANCED: All employees aggregated view interface**: When "Όλοι οι εργαζόμενοι" is selected:
+      - **Independent aggregated display**: Display payment records for ALL employees simultaneously, completely independent of any previous individual employee selection made in other tabs or sections
+      - **Employee-grouped payment display**: Show payment records grouped by employee with clear visual separation and distinct employee headers
+      - **Complete employee coverage**: Include ALL employees in the system regardless of any previous individual selections made in individual payment entry or other sections
+      - **Individual payment details per employee**: Display each payment with its specific date, cash amount, and bank amount for each employee group
+      - **Employee-specific cumulative totals**: Show total cash payments and total bank payments for each individual employee separately within their group
+      - **Clear employee headers**: Maintain proper employee grouping with clear headers showing employee names for easy identification
+      - **Chronological sorting within employee groups**: All payments within each employee group are displayed chronologically by payment date
+      - **Combined monthly totals**: Display grand totals combining all payments across all employees for the selected month at the bottom or top of the aggregated view
+      - **Unaffected by individual selections**: The aggregated view remains consistent and shows all employees regardless of any previous individual employee selections made in other tabs or sections
+      - **Persistent aggregated state**: The "All employees" view maintains its comprehensive display without being influenced by navigation between different payment entry modes
+    - **ENHANCED: Payment record management interface with edit and delete actions**: Each payment entry in the history includes action buttons for direct management:
+      - **FIXED: Edit payment button interface with record update logic**: Action button beside each payment entry with consistent styling (Greek label "Επεξεργασία", appropriate edit icon) that opens the existing `PaymentEditDialog` component with enhanced logic to update existing records instead of creating new ones:
+        - **Pre-filled edit dialog with record identification**: `PaymentEditDialog` opens with all payment data pre-populated (employee, payment date, cash amount, bank amount) and proper record identification for updating
+        - **Record update instead of creation**: Edit dialog uses backend logic to update the existing payment record instead of creating a new payment entry
+        - **Preserve original payment date**: Payment edits maintain the original payment date from the existing record in the edit dialog
+        - **Prevent duplicate record creation**: Edit dialog ensures that payment edits do not result in duplicate payment records for the same employee and date
+        - **Enhanced validation for record updates**: Comprehensive validation for payment edit operations with clear Greek error messages and proper record update logic
+        - **Edit confirmation with record update**: Clear success notifications confirming that the existing payment record has been updated rather than a new record created
+      - **Delete payment button interface**: Action button beside each payment entry with consistent styling (Greek label "Διαγραφή", appropriate delete icon) that triggers payment deletion workflow
+      - **Deletion confirmation modal**: Confirmation modal with Greek text "Επιβεβαίωση διαγραφής" asking "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την πληρωμή;" with "Ναι" and "Όχι" buttons
+      - **ENHANCED: Automatic data refresh after edit with SIMPLIFIED balance calculation and record update**: After saving payment edits through the dialog, automatically refresh the payment list and trigger payroll recalculation and real-time UI updates across all related sections with the updated payment amounts reflected in remaining balance calculations, including SIMPLIFIED balance calculation, ensuring the existing record is updated rather than creating a duplicate
+      - **ENHANCED: Automatic data refresh after delete with SIMPLIFIED balance calculation**: After confirming payment deletion, automatically refresh the payment list and trigger payroll recalculation and real-time UI updates across all related sections, including SIMPLIFIED balance calculation
+      - **Consistent UI styling and placement**: Edit and delete buttons use consistent styling with current design patterns, proper Greek labels, appropriate icons, and same row alignment as edit forms in other application sections
+      - **Action button accessibility**: Edit and delete buttons are clearly visible, properly sized, and accessible for each payment entry in both individual employee and aggregated "All employees" views
+      - **Button state management**: Action buttons remain functional and responsive during edit and delete operations with proper loading states and error handling
+    - **Monthly payment list display**: Show all relevant payment records for the selected month based on employee selection
+    - **Individual payment details**: Display each payment with its specific date, cash amount, and bank amount
+    - **Cumulative monthly totals**: Show total cash payments and total bank payments appropriately based on selection
+    - **Date-sorted payment history**: All payments within scope are displayed chronologically by payment date
+    - **Real-time payment aggregation**: Cumulative totals update immediately when new payments are added, edited, or deleted
+    - **FIXED: Payment editing with date preservation and record update**: Edit existing payments while maintaining their original payment dates and updating the existing record instead of creating duplicates
+    - **Payment deletion with recalculation**: Remove individual payments with automatic recalculation of monthly totals
+    - **Consistent calculation accuracy**: All calculations remain accurate and consistent with monthly payroll data
+  - **Payment history view with guaranteed access**: Enhanced payment viewing with date-based organization and filtering, always accessible
+  - **ENHANCED: Immediate payroll and balance refresh with SIMPLIFIED balance calculation**: After payments are added, edited, or deleted in either individual or bulk mode, payroll calculations and remaining balances are immediately refreshed and updates are instantly visible across all related sections without manual refresh, always functional, including SIMPLIFIED balance calculation
+- **ENHANCED: SIMPLIFIED Payroll Display Interface with ACCURATE calculations, employee type support, structured layout, SIMPLIFIED balance display, calendar synchronization, employee support, complete employee coverage, and fully responsive summary table with multiline column headers**:
+  - **ENHANCED: Structured payroll information layout with employee type awareness, clear hierarchy and SIMPLIFIED balance display**: Well-organized display following the specific calculation order with SIMPLIFIED balance display and employee type-specific calculations:
+    1. **ENHANCED Συνολικός Μηνιαίος Μισθός (Total Monthly Salary)** - prominently displayed with employee type-aware calculation:
+       - **For "Ωριαίος εργαζόμενος"**: (Normal Hours + Leave Hours) × Hourly Rate + Overtime Hours × Overtime Rate
+       - **For "Μηνιαίος εργαζόμενος"**: Fixed Monthly Salary + Overtime Hours × Overtime Rate
+    2. **ENHANCED Μηνιαίος Μισθός Τράπεζας (Monthly Bank Fixed Salary)** - clearly labeled bank salary for the month (if set)
+    3. **Συνολικές Πληρωμές (Total Payments)** - separated display of cumulative cash and bank payments for the month
+    4. **Υπόλοιπο Πραγματικού Μισθού (Remaining Real Salary)** - calculated as Total Monthly Salary − (Total Cash Payments + Total Bank Payments)
+    5. **Υπόλοιπο Τράπεζας (Remaining Bank Balance)** - calculated as Monthly Bank Fixed Salary − Total Bank Payments for the same month
+    6. **ENHANCED Ανάλυση Ωρών (Analysis of Hours)** - detailed breakdown based on employee type at the bottom of each employee's section:
+       - **For "Ωριαίος εργαζόμενος"**: Normal hours, overtime hours, and leave hours
+       - **For "Μηνιαίος εργαζόμενος"**: Work days present, overtime hours, and leave days
+  - **Enhanced visual separation and Greek labeling**: Clear sections for each payroll component with proper Greek labels and improved readability
+  - **Improved multi-employee display with automatic scroll**: Enhanced layout for "Όλοι οι εργαζόμενοι" view with automatic scroll handling and clear employee separation
+  - **ENHANCED: Fully responsive summary table for "Όλοι οι εργαζόμενοι" view with specific 10-column layout, multiline column headers, and SIMPLIFIED balance columns for compact display**: When "Όλοι οι εργαζόμενοι" is selected, display a fully responsive summary table with exactly 10 columns in the specified order with multiline column headers to reduce column width and ensure the table fits fully on screen without horizontal scrolling, including SIMPLIFIED balance calculation:
+    - **Single row per employee**: Each employee's complete payroll data displayed in one row for easy comparison
+    - **ENHANCED: Multiline column headers in Greek for compact display with SIMPLIFIED balance**: Well-organized columns with proper Greek labels split into two lines to reduce column width and optimize table layout, including SIMPLIFIED balance calculation:
+      1. **Όνομα** (Employee Name) - single line header
+      2. **Συνολικός / Μισθός** (Total / Salary) - employee type-aware calculation
+      3. **Μηνιαίος / Μισθός Τράπεζας** (Monthly / Bank Salary)
+      4. **Υπόλοιπο / Συνολικού Μισθού** (Remaining / Real Salary)
+      5. **Υπόλοιπο / Τράπεζας** (Remaining / Bank Balance) - SIMPLIFIED calculation
+      6. **Πληρωμές / Μετρητά** (Payments / Cash)
+      7. **Πληρωμές / Τράπεζα** (Payments / Bank)
+      8. **Κανονικές / Ώρες** (Normal / Hours)
+      9. **Υπερωρίες** (Overtime) - single line header
+      10. **Ημέρες / Άδειας** (Leave / Days)
+    - **Controlled text wrapping with CSS**: Column headers use CSS properties like `white-space: normal; text-align: center; line-height: 1.2;` for proper multiline display and compact layout
+    - **Reduced table width**: Overall table width is optimized to fit fully on screen without horizontal scrolling through multiline headers and intelligent column sizing
+    - **Fully responsive design without horizontal scrolling**: Table automatically adjusts column widths and layout to fit all 10 columns on screen simultaneously across all device sizes using multiline headers
+    - **Proportional column sizing**: Intelligent column width distribution that ensures all data is visible while maintaining readability with compact multiline headers
+    - **Adaptive text sizing**: Text and numeric values scale appropriately for different screen sizes while maintaining legibility
+    - **Optimized column layout**: Strategic column ordering and sizing with multiline headers to maximize information density without compromising usability
+    - **Responsive table structure**: Table structure adapts to viewport constraints while ensuring all columns remain visible with compact headers
+    - **ENHANCED: Total summary row with SIMPLIFIED balance**: Bottom row showing totals for all numeric columns across all employees with responsive formatting, including SIMPLIFIED balance totals
+    - **Cross-device compatibility**: Table displays properly on desktop, tablet, and mobile devices without horizontal scrolling using multiline headers
+    - **Maintained alignment**: All numeric columns properly aligned for easy reading across all screen sizes with compact header display
+    - **Clear column headers**: All 10 column headers are clearly labeled in Greek with proper alignment, spacing, and multiline formatting for optimal readability
+    - **Proper data formatting**: All computed data (totals, balances) correctly match existing payroll calculations including SIMPLIFIED balance amounts
+  - **ENHANCED: Real-time calculation updates with employee type support, automatic refresh, calendar synchronization, and SIMPLIFIED balance calculation**: Accurate updates of all payroll values including employee type-aware calculations and SIMPLIFIED balance amounts when underlying data changes, with enhanced frontend hooks ensuring automatic UI refresh while calendar views simultaneously display visual hour indicators
+  - **ENHANCED: ACCURATE hours breakdown display with employee type support**: Correct presentation of work data contributing to salary calculations based on employee type using the employee type-aware calculation formulas without zero value errors
+  - **ENHANCED: Payment integration display with cumulative totals**: Clear showing of cumulative cash and bank payments with accurate remaining balance calculations using updated payment amounts
+  - **Eliminated zero value display issues**: Proper rendering of all payroll data without incorrect zero values when actual data exists
+  - **ENHANCED: Automatic payroll refresh with calendar synchronization, SIMPLIFIED balance calculation, and real-time UI updates**: Payroll interface automatically refreshes and displays updated calculations after work hours, payments, or bank salaries are modified, with real-time UI synchronization, coordination with calendar visual display updates, and SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: GUARANTEED bulk entry payroll and calendar synchronization with real-time UI updates, SIMPLIFIED balance calculation, confirmation, and automatic data retrieval**: Payroll interface automatically updates and displays recalculated values after bulk work hours entry or bulk bank salary entry without requiring manual page refresh, with enhanced frontend components and hooks ensuring payroll display refresh while calendar views simultaneously display entered hours visually, providing visual confirmation of successful updates, SIMPLIFIED balance calculation using updated payment amounts, and coordination with automatic data retrieval for enhanced user experience
+  - **ENHANCED: Payment change payroll synchronization with cumulative totals and SIMPLIFIED balance calculation**: Payroll interface automatically updates and displays recalculated remaining balances using updated cumulative payment totals after payment entries, edits, or deletions without requiring manual page refresh, including SIMPLIFIED balance calculation using updated payment amounts
+  - **ENHANCED: Complete employee coverage in All Employees view**: "Όλοι οι εργαζόμενοι" payroll view correctly retrieves and displays payroll data for ALL employees in the system using the backend `getAllEmployeesPayrollData` function, ensuring no employees are missing from the results list
+- **FULLY OPERATIONAL: Complete Leave Management Interface with guaranteed functionality, real-time updates, automatic calendar integration, automatic total leave days synchronization, and bulk leave functionality**:
+  - **ENHANCED: Automatic total leave days synchronization interface**: The leave management interface automatically displays and synchronizes total leave days from employee profiles:
+    - **Automatic total leave days display**: Leave page automatically displays the correct total leave days for each employee based on their employee profile "Συνολικές ημέρες άδειας" field
+    - **Real-time synchronization display**: When employee profiles are modified, the leave page automatically updates to show the new total leave days without manual refresh
+    - **Dynamic leave balance recalculation display**: Leave balance displays (used, remaining, total) automatically recalculate and update when employee profile total leave days change
+    - **Consistent data display**: Leave page always shows total leave days that match the employee profile totalAnnualLeaveDays values
+    - **Immediate UI updates**: Leave interface immediately reflects changes to employee profile total leave days with real-time UI updates
+    - **Progress bar synchronization**: Leave progress bars automatically adjust to reflect updated total leave days from employee profiles
+    - **Balance calculation accuracy**: All leave balance calculations use the synchronized total leave days from employee profiles for accurate remaining leave calculations
+  - **FIXED: Individual leave addition interface with guaranteed reliability for ALL employees**: Enhanced individual leave addition user interface that works correctly for every employee:
+    - **BULLETPROOF "Προσθήκη Άδειας" button interface**: The "Προσθήκη Άδειας" (Add Leave) button displays correctly and responds reliably for EVERY employee individually without UI failures or inconsistencies
+    - **GUARANTEED leave form functionality for ALL employees**: Leave addition form opens and functions correctly for all existing employees regardless of their creation order, employee ID, or previous leave records
+    - **UNIVERSAL employee selection compatibility**: Employee dropdown/selection interface works reliably for all employees without special handling or display issues
+    - **CONSISTENT leave date picker for ALL employees**: Date picker for leave selection functions identically for all employees without variations based on employee position or previous interactions
+    - **IMMEDIATE leave balance updates for ALL employees**: When leave is added for any employee, the leave balance displays, progress bars, and remaining days counters update immediately without manual refresh
+    - **REAL-TIME UI synchronization for ALL employees**: Leave addition triggers immediate UI updates across all leave-related displays for every employee consistently
+    - **ENHANCED leave success notifications for ALL employees**: Clear Greek success messages appear when leave is successfully added for any employee, with consistent messaging and styling
+    - **COMPREHENSIVE leave error handling interface for ALL employees**: Clear Greek error messages display if leave addition fails for any employee, with specific feedback for different failure scenarios (exceeding balance, validation errors, backend failures)
+    - **GUARANTEED leave form validation for ALL employees**: Leave form validation works uniformly for all employees, preventing invalid leave entries with clear Greek error messages
+    - **CONSISTENT leave integration display for ALL employees**: Leave entries immediately appear in calendar views and payroll calculations for all employees without display inconsistencies
+  - **Leave entry interface**: Clean, intuitive interface for adding leave days for any employee on specific dates with comprehensive validation
+  - **ENHANCED: Bulk leave addition interface**: New bulk leave functionality with comprehensive user interface:
+    - **"Προσθήκη Άδειας σε Όλους" button**: Prominent button in the main LeavePage actions section with clear Greek labeling and consistent styling
+    - **Bulk leave date picker dialog**: Interactive modal dialog with date picker for selecting the leave date, similar to individual leave dialog design
+    - **Bulk leave confirmation interface**: Clear confirmation dialog showing the selected date and asking for confirmation before proceeding
+    - **Bulk leave progress indication**: Loading state and progress indication during bulk leave processing
+    - **Bulk leave success notification**: Clear Greek success message confirming bulk leave addition for all employees
+    - **Bulk leave error handling interface**: Comprehensive error messages in Greek if bulk leave operation fails for any employee
+    - **Immediate UI refresh after bulk leave**: Automatic refresh of leave balances and progress bars for all employees immediately after bulk leave addition
+  - **Employee selection for leave**: Dropdown or selection interface to choose which employee to add leave for with comprehensive validation
+  - **Leave date picker**: Interactive date picker for selecting leave dates with proper validation and Greek formatting
+  - **Leave balance display**: Real-time display of remaining leave days and progress (used vs total) for each employee
+  - **Leave history view**: Comprehensive display of all leave entries for each employee with dates and remaining balances
+  - **Leave validation interface**: Clear Greek error messages when attempting to add leave days that exceed available balance
+  - **Leave editing interface**: Ability to modify or remove existing leave entries with proper validation and confirmation
+  - **Real-time leave balance updates**: Instant display of updated leave balances after leave entries without manual refresh
+  - **Leave progress visualization**: Clear visual representation showing used leave days vs total annual leave days for each employee
+  - **Leave integration with calendar**: Leave days automatically appear as visual indicators in employee calendar views
+  - **ENHANCED: Employee type-aware leave integration with payroll**: 
+    - **For "Ωριαίος εργαζόμενος"**: Leave entries automatically integrate with payroll calculations as 8 hours of normal work
+    - **For "Μηνιαίος εργαζόμενος"**: Leave entries tracked for balance purposes without affecting fixed monthly salary calculations
+  - **Automatic backend synchronization**: Backend immediately recalculates payroll and leave totals after leave entry with instant UI updates
+  - **Leave success notifications**: Clear Greek success messages when leave entries are added or modified successfully
+  - **Leave error handling**: Comprehensive error handling with clear Greek error messages for leave operations
+  - **ENHANCED: Automatic leave page refresh from calendar actions**: When work days are marked as leave in calendar or bulk entry views, the Leave section automatically refreshes to show updated balances (used, remaining, and total days) without manual refresh
+  - **ENHANCED: Calendar-triggered leave integration**: Leave records are automatically created and synchronized when work days are marked as leave from calendar views, with immediate leave balance updates and real-time leave page refresh
+- **Comprehensive error handling and user feedback with crash prevention**: Clear Greek error messages, loading states, success confirmations throughout the application with white screen prevention and crash prevention mechanisms
+- **ENHANCED: Real-time data updates with employee type support, calendar synchronization, leave integration, SIMPLIFIED balance calculation, crash prevention, consistent behavior, and enhanced daily bulk entry with automatic data retrieval**: Accurate reflection of all data changes across all application views without manual refresh, including correct payroll updates with employee type-aware calculations and SIMPLIFIED balance calculation using updated payment amounts when work hours, payments, or bank salaries change, automatic calendar visual display synchronization, automatic leave record creation and synchronization, with enhanced frontend hooks ensuring automatic payroll UI updates while preventing crashes and white screens, consistent behavior for ALL employee additions without special routing logic, and enhanced daily bulk entry with automatic data retrieval and pre-filling for improved user experience
+- **Performance optimizations with stability and crash prevention**: Efficient loading, smooth transitions, responsive design with comprehensive error prevention, white screen elimination, and crash prevention mechanisms
+- **ENHANCED: Perfect employee-calendar-payroll-payment-leave integration with employee type support, calendar synchronization, consistent behavior, leave integration, SIMPLIFIED balance calculation, crash prevention, and enhanced daily bulk entry with automatic data retrieval**: Seamless user experience where adding employees, entering work hours, managing payments, tracking leave, and viewing payroll all work together flawlessly without broken links, missing functionality, calculation errors, white screens, page reloads, or crashes, including proper employee type handling throughout all systems, automatic real-time payroll UI updates after work hour, payment, and bank salary submissions using updated payment amounts, automatic calendar visual display synchronization showing entered hours as visual indicators, consistent behavior for ALL employee additions without automatic navigation, full leave management integration with automatic leave record creation from calendar operations, automatic leave page refresh when leave is marked from calendar views, automatic total leave days synchronization with employee profiles, bulk leave functionality for adding leave to all employees simultaneously, SIMPLIFIED balance functionality that calculates bank balance as Monthly Bank Fixed Salary − Total Bank Payments for the same month using updated payment amounts, enhanced daily bulk entry with automatic data retrieval and pre-filling that allows users to return to previously saved dates and see their saved work hours automatically loaded for modification, and FIXED payment editing logic that ensures existing payment records are updated instead of creating duplicates while preserving original payment dates and automatically recalculating payroll with updated payment amounts
