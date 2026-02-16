@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useAddPaymentRecordsBulk } from '../hooks/useQueries';
+import { useAddPaymentsBulk } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ export default function BulkPaymentEntryTable({ employees }: BulkPaymentEntryTab
   const [isSaving, setIsSaving] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  const addPaymentRecordsBulk = useAddPaymentRecordsBulk();
+  const addPaymentsBulk = useAddPaymentsBulk();
 
   // Format selected date as YYYY-MM-DD for backend (backend expects this format)
   const dateStr = useMemo(() => {
@@ -120,11 +120,8 @@ export default function BulkPaymentEntryTable({ employees }: BulkPaymentEntryTab
         return;
       }
 
-      // Save all payments in bulk
-      await addPaymentRecordsBulk.mutateAsync(paymentsBulk);
-
-      const dateDisplay = format(selectedDate, 'd MMMM yyyy', { locale: el });
-      toast.success(`Αποθηκεύτηκαν επιτυχώς ${paymentsBulk.length} πληρωμές για ${dateDisplay}`);
+      // Save all payments using the bulk mutation
+      await addPaymentsBulk.mutateAsync(paymentsBulk);
 
       // Clear entries after successful save
       const clearedEntries = new Map<string, EmployeePaymentEntry>();
@@ -136,139 +133,109 @@ export default function BulkPaymentEntryTable({ employees }: BulkPaymentEntryTab
         });
       });
       setEntries(clearedEntries);
-    } catch (error) {
-      console.error('Error in handleSaveAll:', error);
-      toast.error('Σφάλμα κατά την αποθήκευση');
+    } catch (error: any) {
+      // Error is already handled by the mutation
+      console.error('Error saving bulk payments:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const getEntry = (employeeId: bigint): EmployeePaymentEntry => {
-    const key = employeeId.toString();
-    return entries.get(key) || { employeeId, cashPayment: '', bankPayment: '' };
-  };
-
-  if (employees.length === 0) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <CalendarIcon className="h-12 w-12 mb-4" />
-          <p>Δεν υπάρχουν εργαζόμενοι</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Format the selected date for display
-  const displayDate = format(selectedDate, 'EEEE, d MMMM yyyy', { locale: el });
-
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col gap-4">
-          <div>
-            <CardTitle>Μαζική Καταχώρηση Πληρωμών</CardTitle>
-            <CardDescription>Καταχωρήστε πληρωμές για όλους τους εργαζόμενους για την επιλεγμένη ημερομηνία</CardDescription>
-          </div>
-          
-          {/* Date Picker */}
-          <div className="flex flex-col gap-3 p-5 bg-muted/50 rounded-lg border">
-            <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Ημερομηνία Πληρωμής:</div>
+        <CardTitle>Μαζική Καταχώρηση Πληρωμών</CardTitle>
+        <CardDescription>
+          Καταχωρήστε πληρωμές για όλους τους εργαζομένους για μια συγκεκριμένη ημερομηνία
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full justify-start text-left font-normal text-base h-12',
+                    'w-full justify-start text-left font-normal',
                     !selectedDate && 'text-muted-foreground'
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-5 w-5" />
-                  {selectedDate ? displayDate : 'Επιλέξτε ημερομηνία'}
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: el }) : <span>Επιλέξτε ημερομηνία</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 calendar-enhanced-large" align="start">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={handleDateSelect}
-                  initialFocus
                   locale={el}
+                  initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40%]">Εργαζόμενος</TableHead>
-                <TableHead className="w-[30%]">Πληρωμή Μετρητών (€)</TableHead>
-                <TableHead className="w-[30%]">Πληρωμή Τράπεζας (€)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {employees.map((employee) => {
-                const entry = getEntry(employee.id);
-
-                return (
-                  <TableRow key={employee.id.toString()}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{employee.fullName}</span>
-                        <span className="text-xs text-muted-foreground">{employee.email || 'Χωρίς email'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={entry.cashPayment}
-                        onChange={(e) => handleEntryChange(employee.id, 'cashPayment', e.target.value)}
-                        disabled={isSaving}
-                        className="w-full"
-                        autoComplete="off"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={entry.bankPayment}
-                        onChange={(e) => handleEntryChange(employee.id, 'bankPayment', e.target.value)}
-                        disabled={isSaving}
-                        className="w-full"
-                        autoComplete="off"
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex justify-end">
-          <Button onClick={handleSaveAll} disabled={isSaving} size="lg">
-            {isSaving ? (
+          <Button onClick={handleSaveAll} disabled={isSaving || addPaymentsBulk.isPending} className="gap-2">
+            {isSaving || addPaymentsBulk.isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Αποθήκευση...
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
+                <Save className="h-4 w-4" />
                 Αποθήκευση Όλων
               </>
             )}
           </Button>
         </div>
+
+        {employees.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Δεν υπάρχουν εργαζόμενοι
+          </div>
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Όνομα Εργαζομένου</TableHead>
+                  <TableHead className="w-[30%]">Πληρωμή Μετρητών (€)</TableHead>
+                  <TableHead className="w-[30%]">Πληρωμή Τράπεζας (€)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((employee) => {
+                  const entry = entries.get(employee.id.toString());
+                  return (
+                    <TableRow key={employee.id.toString()}>
+                      <TableCell className="font-medium">{employee.fullName}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          placeholder="0.00"
+                          value={entry?.cashPayment || ''}
+                          onChange={(e) => handleEntryChange(employee.id, 'cashPayment', e.target.value)}
+                          className="w-full"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          placeholder="0.00"
+                          value={entry?.bankPayment || ''}
+                          onChange={(e) => handleEntryChange(employee.id, 'bankPayment', e.target.value)}
+                          className="w-full"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

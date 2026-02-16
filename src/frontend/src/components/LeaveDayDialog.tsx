@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAddLeaveDay } from '../hooks/useQueries';
+import { useToggleLeaveDay } from '../hooks/useQueries';
 import {
   Dialog,
   DialogContent,
@@ -16,18 +16,18 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { el } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import type { Employee } from '../backend';
 
 interface LeaveDayDialogProps {
-  employee: Employee;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  employeeId: bigint;
+  employeeName: string;
 }
 
-export default function LeaveDayDialog({ employee, open, onOpenChange }: LeaveDayDialogProps) {
+export default function LeaveDayDialog({ open, onOpenChange, employeeId, employeeName }: LeaveDayDialogProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-  const addLeaveDay = useAddLeaveDay();
+  const toggleLeaveDay = useToggleLeaveDay();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +43,7 @@ export default function LeaveDayDialog({ employee, open, onOpenChange }: LeaveDa
     const dateStr = `${year}-${month}-${day}`;
 
     try {
-      await addLeaveDay.mutateAsync({
-        employeeId: employee.id,
-        date: dateStr,
-      });
+      await toggleLeaveDay.mutateAsync({ employeeId, date: dateStr });
       
       // Close dialog on success
       onOpenChange(false);
@@ -66,12 +63,12 @@ export default function LeaveDayDialog({ employee, open, onOpenChange }: LeaveDa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Προσθήκη Άδειας</DialogTitle>
             <DialogDescription>
-              Προσθέστε μια ημέρα άδειας για τον/την {employee.fullName}
+              Προσθέστε μια ημέρα άδειας για τον εργαζόμενο: {employeeName}
             </DialogDescription>
           </DialogHeader>
 
@@ -109,9 +106,13 @@ export default function LeaveDayDialog({ employee, open, onOpenChange }: LeaveDa
             </div>
 
             <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <p>
-                Η άδεια θα καταχωρηθεί ως 8 ώρες εργασίας και θα αφαιρεθεί αυτόματα από το υπόλοιπο των διαθέσιμων ημερών άδειας.
-              </p>
+              <p className="font-medium mb-2">Σημείωση:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Η άδεια θα καταχωρηθεί ως 8 ώρες εργασίας</li>
+                <li>Θα αφαιρεθεί αυτόματα 1 ημέρα από το υπόλοιπο αδειών του εργαζομένου</li>
+                <li>Η μισθοδοσία θα ενημερωθεί αυτόματα</li>
+                <li>Το σύστημα παρακολούθησης αδειών θα ενημερωθεί</li>
+              </ul>
             </div>
           </div>
 
@@ -120,15 +121,15 @@ export default function LeaveDayDialog({ employee, open, onOpenChange }: LeaveDa
               type="button"
               variant="outline"
               onClick={handleCancel}
-              disabled={addLeaveDay.isPending}
+              disabled={toggleLeaveDay.isPending}
             >
               Ακύρωση
             </Button>
-            <Button type="submit" disabled={addLeaveDay.isPending || !selectedDate}>
-              {addLeaveDay.isPending ? (
+            <Button type="submit" disabled={toggleLeaveDay.isPending || !selectedDate}>
+              {toggleLeaveDay.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Αποθήκευση...
+                  Προσθήκη...
                 </>
               ) : (
                 'Προσθήκη Άδειας'

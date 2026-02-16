@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetAllEmployees, useSetMonthlyBankSalaryBulk } from '../hooks/useQueries';
+import { useGetAllEmployees, useSetMonthlyBankSalariesBulk } from '../hooks/useQueries';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,7 @@ export default function BulkMonthlyBankSalaryDialog({
   onOpenChange,
 }: BulkMonthlyBankSalaryDialogProps) {
   const { data: employees = [], isLoading: employeesLoading } = useGetAllEmployees();
-  const setMonthlyBankSalaryBulk = useSetMonthlyBankSalaryBulk();
+  const setMonthlyBankSalariesBulk = useSetMonthlyBankSalariesBulk();
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
@@ -98,7 +98,7 @@ export default function BulkMonthlyBankSalaryDialog({
         return;
       }
 
-      await setMonthlyBankSalaryBulk.mutateAsync(bulkData);
+      await setMonthlyBankSalariesBulk.mutateAsync(bulkData);
 
       // Reset form and close dialog
       setSalaryValues({});
@@ -207,16 +207,16 @@ export default function BulkMonthlyBankSalaryDialog({
           <Button
             variant="outline"
             onClick={handleCancel}
-            disabled={setMonthlyBankSalaryBulk.isPending}
+            disabled={setMonthlyBankSalariesBulk.isPending}
           >
             Ακύρωση
           </Button>
           <Button
             onClick={handleSaveAll}
-            disabled={setMonthlyBankSalaryBulk.isPending || employees.length === 0}
+            disabled={setMonthlyBankSalariesBulk.isPending || employees.length === 0}
             className="gap-2"
           >
-            {setMonthlyBankSalaryBulk.isPending ? (
+            {setMonthlyBankSalariesBulk.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Αποθήκευση...

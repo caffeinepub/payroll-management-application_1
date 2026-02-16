@@ -1,0 +1,37 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Employee Calendar: React Query cache invalidation for Bulk→Individual workday sync",
+  "requirements": [
+    {
+      "id": "REQ-4",
+      "summary": "Invalidate Individual calendar React Query workday caches after successful Bulk Daily save so Individual views reflect bulk edits immediately.",
+      "acceptanceCriteria": [
+        "After a successful bulk save, navigating to the Individual calendar for an affected employee shows the updated day values without a hard refresh.",
+        "The React Query cache keys for both bulk daily data and individual workday data are invalidated on bulk save success."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the `useSaveDailyBulkWorkDays()` mutation success handler to explicitly invalidate both Bulk Daily query keys (e.g., `['dailyBulkWorkDays', date]`) and Individual workday query keys (e.g., `['workDays', employeeId]` and `['workDay', employeeId, date]`) to guarantee immediate Bulk→Individual synchronization across per-employee and per-day caches."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Limit changes strictly to Employee Calendar synchronization behavior (no unrelated UI/feature changes).",
+      "acceptanceCriteria": [
+        "Only code paths related to Individual/Bulk workday synchronization and dependent payroll refresh are changed.",
+        "No unrelated UI text, styling, navigation, or other feature behavior changes are introduced."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/docs/employee-calendar-sync.md",
+          "operation": "create",
+          "description": "Add a short internal developer note documenting the intended React Query invalidation behavior for Bulk↔Individual workday synchronization (query keys to invalidate and why), to help keep future edits scoped and avoid unrelated UI/functional changes."
+        }
+      ]
+    }
+  ]
+}

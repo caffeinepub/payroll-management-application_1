@@ -9,7 +9,9 @@ import Principal "mo:base/Principal";
 import Stripe "stripe/stripe";
 import AccessControl "authorization/access-control";
 import OutCall "http-outcalls/outcall";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   // ============================================================================
   // MAP INITIALIZATIONS
@@ -138,7 +140,6 @@ actor {
   var paymentRecords : OrderedMap.Map<Nat, OrderedMap.Map<Text, [PaymentRecord]>> = natMap.empty<OrderedMap.Map<Text, [PaymentRecord]>>();
   var monthlyBankSalaries : OrderedMap.Map<Nat, OrderedMap.Map<Text, [MonthlyBankSalary]>> = natMap.empty<OrderedMap.Map<Text, [MonthlyBankSalary]>>();
   var payrollBalances : OrderedMap.Map<Nat, OrderedMap.Map<Text, PayrollBalance>> = natMap.empty<OrderedMap.Map<Text, PayrollBalance>>();
-  var dailyBulkEntries : OrderedMap.Map<Text, [(Nat, WorkDay)]> = textMap.empty<[(Nat, WorkDay)]>();
   var userProfiles : OrderedMap.Map<Principal, UserProfile> = principalMap.empty<UserProfile>();
   var changeHistories : OrderedMap.Map<Nat, ChangeHistory> = natMap.empty<ChangeHistory>();
 
@@ -625,8 +626,6 @@ actor {
   // ============================================================================
 
   public shared func saveDailyBulkWorkDays(date : Text, entries : [(Nat, WorkDay)]) : async () {
-    dailyBulkEntries := textMap.put(dailyBulkEntries, date, entries);
-
     for ((employeeId, workDay) in entries.vals()) {
       let employeeWorkDays = switch (natMap.get(workDays, employeeId)) {
         case (null) { textMap.empty<WorkDay>() };
@@ -644,10 +643,17 @@ actor {
   };
 
   public query func getDailyBulkWorkDays(date : Text) : async [(Nat, WorkDay)] {
-    switch (textMap.get(dailyBulkEntries, date)) {
-      case (null) { [] };
-      case (?entries) { entries };
-    };
+    let results = Array.mapFilter<(Nat, OrderedMap.Map<Text, WorkDay>), (Nat, WorkDay)>(
+      Iter.toArray(natMap.entries(workDays)),
+      func((employeeId, employeeWorkDays)) {
+        switch (textMap.get(employeeWorkDays, date)) {
+          case (null) { null };
+          case (?workDay) { ?(employeeId, workDay) };
+        };
+      },
+    );
+
+    results;
   };
 
   // ============================================================================

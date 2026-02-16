@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAddLeaveDayBulk, useGetAllEmployees } from '../hooks/useQueries';
+import { useAddBulkLeaveDay, useGetAllEmployees } from '../hooks/useQueries';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ export default function BulkLeaveDayDialog({ open, onOpenChange }: BulkLeaveDayD
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { data: employees = [] } = useGetAllEmployees();
   
-  const addLeaveDayBulk = useAddLeaveDayBulk();
+  const addBulkLeaveDay = useAddBulkLeaveDay();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +46,7 @@ export default function BulkLeaveDayDialog({ open, onOpenChange }: BulkLeaveDayD
     const dateStr = `${year}-${month}-${day}`;
 
     try {
-      await addLeaveDayBulk.mutateAsync(dateStr);
+      await addBulkLeaveDay.mutateAsync(dateStr);
       
       // Close dialog on success
       onOpenChange(false);
@@ -135,15 +135,15 @@ export default function BulkLeaveDayDialog({ open, onOpenChange }: BulkLeaveDayD
               type="button"
               variant="outline"
               onClick={handleCancel}
-              disabled={addLeaveDayBulk.isPending}
+              disabled={addBulkLeaveDay.isPending}
             >
               Ακύρωση
             </Button>
             <Button 
               type="submit" 
-              disabled={addLeaveDayBulk.isPending || !selectedDate || employees.length === 0}
+              disabled={addBulkLeaveDay.isPending || !selectedDate || employees.length === 0}
             >
-              {addLeaveDayBulk.isPending ? (
+              {addBulkLeaveDay.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Προσθήκη...
@@ -161,4 +161,3 @@ export default function BulkLeaveDayDialog({ open, onOpenChange }: BulkLeaveDayD
     </Dialog>
   );
 }
-

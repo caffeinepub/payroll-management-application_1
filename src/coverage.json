@@ -1,0 +1,87 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T14:03:33.847Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 5,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Backend: Make work-hour entries a single source of truth so that saving a WorkDay from the Individual entry flow immediately appears in the Daily Bulk entry view for the same date (and vice versa). This must work for normal hours, overtime hours, and leave status.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Backend: Ensure payroll recalculation runs when hours are added/updated through either Individual workday saving or Bulk daily saving, so payroll screens reflect the latest hours.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Backend: Update the Daily Bulk retrieval API so it returns the currently stored per-employee WorkDay values for the requested date (not stale/isolated bulk-only storage), ensuring the Bulk UI always displays the same data as the Individual calendar.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Frontend: When saving hours via the Bulk Daily entry mutation, invalidate/react-query-refresh the Individual calendar workday queries (and any per-day query keys) in addition to bulk query keys, so the Individual calendar view is updated immediately after bulk saves.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/docs/employee-calendar-sync.md"
+        ],
+        "matchedFiles": [
+          "frontend/src/docs/employee-calendar-sync.md"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "build-template/Dockerfile",
+    "build-template/LICENSE",
+    "build-template/README.md",
+    "build-template/deploy.sh",
+    "build-template/icp.yaml",
+    "build-template/src/backend/canister.yaml",
+    "build-template/src/frontend/canister.yaml",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/components/BulkLeaveDayDialog.tsx",
+    "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx",
+    "frontend/src/components/BulkPaymentEntryTable.tsx",
+    "frontend/src/components/LeaveDayDialog.tsx",
+    "frontend/src/config.ts",
+    "frontend/src/docs/employee-calendar-sync.md",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/PaymentsPage.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

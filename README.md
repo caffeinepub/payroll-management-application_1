@@ -1,2 +1,3 @@
-# payroll-management-application_1
-Exported from Caffeine project: Sync individual and bulk time entry with payroll recalculation
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

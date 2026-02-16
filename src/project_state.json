@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "App feature request: ensure Employee Calendar time entries stay synchronized between individual and bulk entry, and update payroll accordingly.",
+  "architectural_notes": [
+    "Scope constraint: do not change anything else in the application or its existing functionality beyond the time-entry/payroll synchronization."
+  ],
+  "known_issues": [],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-frontend-when-saving-hours-via-the-bulk-daily-entry-mutation-invalidate-react-query-refresh-the-individual-calendar-workday-queries-and-any-per-day-query-keys-in-addition-to-bulk-query-keys-so-the-individual-calendar-view-is-updated-immediately-after-bulk-saves",
+      "title": "Frontend: When saving hours via the Bulk Daily entry mutation, invalidate/react-query-refresh the Individual calendar workday queries (and any per-day query keys) in addition to bulk query keys, so the Individual calendar view is updated immediately after bulk saves.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-do-not-introduce-any-other-functional-or-ui-changes-outside-the-employee-calendar-synchronization-behavior-described-here",
+      "title": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "In Employee Calendar, synchronize hours between Individual Time Entry and Bulk Time Entry bidirectionally; ensure payroll updates accordingly when hours are added/edited in either place.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Backend: Make work-hour entries a single source of truth so that saving a WorkDay from the Individual entry flow immediately appears in the Daily Bulk entry view for the same date (and vice versa). This must work for normal hours, overtime hours, and leave status.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Backend: Ensure payroll recalculation runs when hours are added/updated through either Individual workday saving or Bulk daily saving, so payroll screens reflect the latest hours.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Backend: Update the Daily Bulk retrieval API so it returns the currently stored per-employee WorkDay values for the requested date (not stale/isolated bulk-only storage), ensuring the Bulk UI always displays the same data as the Individual calendar.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Bidirectional sync between Individual and Bulk work-hour entries in Employee Calendar",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
