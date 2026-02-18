@@ -1,118 +1,59 @@
 {
   "kind": "build_request",
-  "title": "Bidirectional sync between Individual and Bulk work-hour entries in Employee Calendar",
-  "priority": "normal",
+  "title": "Fix authorization errors so anyone with the link can add employees and use the app",
+  "projectName": "Payroll Manager",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Backend: Make work-hour entries a single source of truth so that saving a WorkDay from the Individual entry flow immediately appears in the Daily Bulk entry view for the same date (and vice versa). This must work for normal hours, overtime hours, and leave status.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-19"
-        ],
-        "quotes": [
-          "ΣΤΗΝ ΛΕΙΤΟΥΡΓΙΑ ΗΜΕΡΟΛΟΓΙΟ ΕΡΓΑΖΟΜΕΝΩΝ ,  Η ΑΤΟΜΙΚΗ ΚΑΤΑΧΩΡΗΣΗ ΩΡΩΝ ΝΑ ΕΝΗΜΕΡΩΝΕΙ ΤΗΝ ΜΑΖΙΚΗ ΚΑΤΑΧΩΡΗΣΗ ΩΡΩΝ ΚΑΙ Η ΤΟ ΑΝΤΙΣΤΙΣΤΟΦΟ."
-        ]
-      },
-      "acceptanceCriteria": [
-        "If a user saves hours for an employee on a specific date via the Individual calendar dialog, opening the Bulk Daily table on the same date shows the saved values for that employee without requiring a manual data workaround.",
-        "If a user saves hours via the Bulk Daily table for a specific date, the Individual calendar for each affected employee shows the same values for that date.",
-        "Leave entries saved from either flow are reflected in the other flow consistently (including isLeave and hours behavior)."
-      ]
-    },
-    {
       "id": "REQ-2",
-      "text": "Backend: Ensure payroll recalculation runs when hours are added/updated through either Individual workday saving or Bulk daily saving, so payroll screens reflect the latest hours.",
+      "text": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps that produce the messages \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially the add-employee flow), while keeping admin-only restrictions intact for admin-only operations (e.g., updating/deleting employees, work day edits, Stripe configuration).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-10"
+          "msg-1"
         ],
         "quotes": [
-          "...ΝΑ ΕΝΗΜΕΡΩΝΕΤΑΙ ... ΚΑΙ Η ΜΙΣΘΟΔΟΣΙΑ ..."
+          "ΔΙΟΡΘΩΣΕ ΤΑ ΣΦΑΜΛΑΤΑ ONLY ADMIN ΚΑΙ ONLY USERS ACCESS AND CAN PERFROM THIS ACTION ... ΩΣΤΕ ... ΝΑ ΜΠΟΡΕΙ ΝΑ ΚΑΝΕΙ ΠΡΟΣΘΗΚΗ ΕΡΓΑΖΟΜΕΝΩΝ ΚΑΙ ΝΑ ΛΕΙΤΟΥΡΓΙΣΕΙ ΤΗΝ ΕΦΑΡΜΟΓΗ. ΜΗΝ ΑΛΛΑΞΕΙΣ ΤΙΠΟΤΑ ΑΛΛΟ ..."
         ]
       },
       "acceptanceCriteria": [
-        "After saving hours through the Individual flow, payroll data queries reflect updated totals for the relevant month/year.",
-        "After saving hours through the Bulk flow, payroll data queries reflect updated totals for the relevant month/year.",
-        "No additional user action (refresh/navigate away) is required to trigger payroll updates beyond the save action."
+        "A user can open the app via link and successfully call backend methods required for the Employees page without receiving any \"Unauthorized: Only users...\" traps.",
+        "Calling addEmployee from the frontend succeeds for non-admin/non-assigned users and does not return/trap with \"Unauthorized: Only users can perform this action\".",
+        "Admin-only operations (those currently guarded by #admin checks, e.g., updateEmployeeWithChangeLog, deleteEmployee, addWorkDay, setStripeConfiguration) remain restricted and still fail for non-admin callers.",
+        "No other backend behaviors (data validation, payroll recalculation side effects, ID assignment) are changed for addEmployee beyond the authorization behavior."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Backend: Update the Daily Bulk retrieval API so it returns the currently stored per-employee WorkDay values for the requested date (not stale/isolated bulk-only storage), ensuring the Bulk UI always displays the same data as the Individual calendar.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-19"
-        ],
-        "quotes": [
-          "...ΟΙ ΩΡΕΣ ΤΩΝ ΕΡΓΑΖΟΜΕΝΩΝ ΝΑ ΕΙΝΑΙ ΕΝΗΜΕΡΟΜΕΝΕΣ."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Calling the backend method used by `useGetDailyBulkWorkDays(date)` returns entries consistent with `getWorkDay(employeeId, date)` / `getWorkDays(employeeId)` for that date.",
-        "If an Individual save happens first, a subsequent Bulk fetch for that date includes that employee’s entry."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Frontend: When saving hours via the Bulk Daily entry mutation, invalidate/react-query-refresh the Individual calendar workday queries (and any per-day query keys) in addition to bulk query keys, so the Individual calendar view is updated immediately after bulk saves.",
+      "text": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-19"
+          "msg-1"
         ],
         "quotes": [
-          "...Η ΑΤΟΜΙΚΗ ΚΑΤΑΧΩΡΗΣΗ ... ΚΑΙ Η ΤΟ ΑΝΤΙΣΤΙΣΤΟΦΟ."
+          "ΔΙΟΡΘΩΣΕ ΤΑ ΣΦΑΜΛΑΤΑ ONLY ADMIN ΚΑΙ ONLY USERS ACCESS AND CAN PERFROM THIS ACTION ..."
         ]
       },
       "acceptanceCriteria": [
-        "After a successful bulk save, navigating to the Individual calendar for an affected employee shows the updated day values without a hard refresh.",
-        "The React Query cache keys for both bulk daily data and individual workday data are invalidated on bulk save success."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-19"
-        ],
-        "quotes": [
-          "ΜΗΝ ΑΛΑΞΕΙΣ ΤΙΠΟΤΑ ΑΛΛΟ ΣΤΗΝ ΕΦΑΡΜΟΓΗ ΚΑΙ ΣΤΙΣ ΛΕΙΤΟΥΡΓΙΕΣ ΤΗΣ."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Only code paths related to Individual/Bulk workday synchronization and dependent payroll refresh are changed.",
-        "No unrelated UI text, styling, navigation, or other feature behavior changes are introduced."
+        "After the backend fix, adding an employee from the Employees page completes successfully and no authorization error toast/message is shown.",
+        "No visual redesign or feature changes are introduced; the existing pages/components remain functionally the same aside from the removed blocking auth errors."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo.",
-    "Do not edit any files under frontend immutable paths (e.g., frontend/src/hooks/useActor.ts, frontend/src/hooks/useInternetIdentity.ts, frontend/src/main.tsx, frontend/src/components/ui/*).",
-    "Use English for any user-facing text in this build request."
+    "Do not change any UI appearance, navigation, or features beyond what is necessary to eliminate the blocking authorization errors described by the user.",
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Do not relax or modify admin-only authorization rules for operations other than what is necessary to let any user add employees and use the app normally.",
+    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT."
   ],
   "nonGoals": [
-    "Adding new calendar features (e.g., weekly views, exports).",
-    "Implementing real-time updates (WebSockets).",
-    "Changing the leave-hours business rule beyond existing behavior."
+    "Adding new roles/permissions UI for managing admins/users.",
+    "Adding third-party authentication providers or changing Internet Identity integration.",
+    "Implementing new app features unrelated to fixing the reported authorization errors."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

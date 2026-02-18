@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-frontend-when-saving-hours-via-the-bulk-daily-entry-mutation-invalidate-react-query-refresh-the-individual-calendar-workday-queries-and-any-per-day-query-keys-in-addition-to-bulk-query-keys-so-the-individual-calendar-view-is-updated-immediately-after-bulk-saves",
-      "featureTitle": "Frontend: When saving hours via the Bulk Daily entry mutation, invalidate/react-query-refresh the Individual calendar workday queries (and any per-day query keys) in addition to bulk query keys, so the Individual calendar view is updated immediately after bulk saves.",
+      "featureId": "feature-ensure-the-frontend-does-not-display-the-authorization-error-strings-e-g-only-users-can-perform-this-action-during-normal-usage-flows-especially-employee-creation-once-backend-authorization-is-corrected-without-changing-the-ui-layout-design-or-any-existing-features",
+      "featureTitle": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
       "files": [
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/EmployeesPage.tsx",
+        "frontend/src/utils/errors.ts"
       ],
       "components": [
         "authorization@1.0.1",
@@ -18,28 +20,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-do-not-introduce-any-other-functional-or-ui-changes-outside-the-employee-calendar-synchronization-behavior-described-here",
-      "featureTitle": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
-      "files": [
-        "frontend/src/docs/employee-calendar-sync.md"
-      ],
-      "components": [
-        "authorization@1.0.1",
-        "stripe@1.0.1",
-        "http-outcalls@1.1.1",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-5"
+        "REQ-3"
       ],
       "confidence": "high"
     }

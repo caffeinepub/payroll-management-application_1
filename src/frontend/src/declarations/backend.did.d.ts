@@ -187,9 +187,6 @@ export interface _SERVICE {
   'initializeAccessControl' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
-  /**
-   * / Reset all employee leave records at the beginning of the year (January).
-   */
   'resetAllLeaveRecords' : ActorMethod<[bigint], undefined>,
   'resetLeaveRecord' : ActorMethod<[bigint, bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
@@ -210,9 +207,6 @@ export interface _SERVICE {
   'toggleLeaveDay' : ActorMethod<[bigint, string], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateEmployeeWithChangeLog' : ActorMethod<[bigint, Employee], undefined>,
-  /**
-   * / Updates leave record using the new value, adjusting the `leaveDaysUsed` and `remainingLeaveDays` accordingly.
-   */
   'updateLeaveDaysUsed' : ActorMethod<[bigint, bigint], undefined>,
   'updateMonthlyBankSalary' : ActorMethod<
     [bigint, bigint, bigint, bigint, number],

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type { Employee, WorkDay, LeaveRecord, PaymentRecord, ChangeHistory } from '../backend';
 import { toast } from 'sonner';
+import { normalizeErrorMessage } from '../utils/errors';
 
 /**
  * Helper function to convert number to string for backend
@@ -246,9 +247,12 @@ export function useAddEmployee() {
         queryClient.setQueryData(['employees'], context.previousEmployees);
       }
       
+      // Normalize error message to strip authorization trap strings
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά την προσθήκη εργαζομένου', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
     retry: false,
@@ -351,9 +355,12 @@ export function useUpdateEmployee() {
         queryClient.setQueryData(['employees'], context.previousEmployees);
       }
       
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά την ενημέρωση', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -400,9 +407,12 @@ export function useDeleteEmployee() {
         queryClient.setQueryData(['employees'], context.previousEmployees);
       }
       
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά τη διαγραφή', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -502,92 +512,12 @@ export function useAddWorkDay() {
       }
     },
     onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά την αποθήκευση', {
         duration: 5000,
-        description: error.message,
-      });
-    },
-  });
-}
-
-/**
- * Bulk Daily Work Days Entry Mutation
- * Ensures bidirectional synchronization: Bulk → Individual
- * Invalidates both bulk and individual query caches
- */
-export function useSaveDailyBulkWorkDays() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ date, entries }: { date: string; entries: Array<[bigint, WorkDay]> }) => {
-      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      
-      // Use the backend's saveDailyBulkWorkDays function which handles updates
-      await actor.saveDailyBulkWorkDays(date, entries);
-      
-      return { date, entries };
-    },
-    onSuccess: async ({ date, entries }) => {
-      // BIDIRECTIONAL SYNC: Bulk → Individual
-      // Invalidate ALL work day related queries to ensure synchronization
-      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] }); // Bulk daily view
-      queryClient.invalidateQueries({ queryKey: ['workDays'] }); // Individual per-employee view
-      queryClient.invalidateQueries({ queryKey: ['workDay'] }); // Individual per-day view
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
-      
-      // Check if any work days were marked as leave
-      const hasLeave = entries.some(([_, workDay]) => workDay.isLeave);
-      
-      if (hasLeave) {
-        toast.success('Επιτυχία! Οι καταχωρήσεις αποθηκεύτηκαν και τα υπόλοιπα αδειών ενημερώθηκαν αυτόματα.', {
-          duration: 4000,
-          description: 'Η μισθοδοσία, το ατομικό ημερολόγιο και η μαζική καταχώρηση συγχρονίστηκαν.',
-        });
-      } else {
-        toast.success('Επιτυχία! Οι καταχωρήσεις αποθηκεύτηκαν και η μισθοδοσία ενημερώθηκε αυτόματα.', {
-          duration: 3000,
-          description: 'Το ατομικό ημερολόγιο και η μαζική καταχώρηση συγχρονίστηκαν.',
-        });
-      }
-    },
-    onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την αποθήκευση', {
-        duration: 5000,
-        description: error.message,
-      });
-    },
-  });
-}
-
-export function useAddWorkDaysBulk() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (entries: Array<[bigint, WorkDay]>) => {
-      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.addWorkDaysBulk(entries);
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['workDays'] });
-      queryClient.invalidateQueries({ queryKey: ['workDay'] });
-      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
-      
-      toast.success('Επιτυχία! Οι ώρες εργασίας αποθηκεύτηκαν.', {
-        duration: 3000,
-      });
-    },
-    onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την αποθήκευση', {
-        duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -600,24 +530,38 @@ export function useUpdateWorkDay() {
   return useMutation({
     mutationFn: async ({ employeeId, date, workDay }: { employeeId: bigint; date: string; workDay: WorkDay }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.updateWorkDay(employeeId, date, workDay);
+      await actor.updateWorkDay(employeeId, date, workDay);
+      return { employeeId, date, workDay };
     },
-    onSuccess: async () => {
+    onSuccess: async ({ employeeId, workDay }) => {
+      // BIDIRECTIONAL SYNC: Individual → Bulk
       queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['workDay'] });
       queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
       queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Η ημέρα εργασίας ενημερώθηκε.', {
-        duration: 3000,
-      });
+      if (workDay.isLeave) {
+        toast.success('Επιτυχία! Η άδεια ενημερώθηκε και το υπόλοιπο αδειών επανυπολογίστηκε.', {
+          duration: 4000,
+          description: 'Η μισθοδοσία και το ημερολόγιο ενημερώθηκαν επίσης.',
+        });
+      } else {
+        toast.success('Επιτυχία! Οι ώρες εργασίας ενημερώθηκαν και η μισθοδοσία επανυπολογίστηκε.', {
+          duration: 3000,
+          description: 'Το ημερολόγιο και η μαζική καταχώρηση συγχρονίστηκαν.',
+        });
+      }
     },
     onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά την ενημέρωση', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -630,24 +574,115 @@ export function useDeleteWorkDay() {
   return useMutation({
     mutationFn: async ({ employeeId, date }: { employeeId: bigint; date: string }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.deleteWorkDay(employeeId, date);
+      await actor.deleteWorkDay(employeeId, date);
+      return { employeeId, date };
     },
     onSuccess: async () => {
+      // BIDIRECTIONAL SYNC: Individual → Bulk
       queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['workDay'] });
       queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
       queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
       toast.success('Επιτυχία! Η ημέρα εργασίας διαγράφηκε.', {
         duration: 3000,
+        description: 'Η μισθοδοσία και το ημερολόγιο ενημερώθηκαν.',
       });
     },
     onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
       toast.error('Σφάλμα κατά τη διαγραφή', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
+      });
+    },
+  });
+}
+
+/**
+ * Bulk Work Days Entry Mutation
+ * Ensures bidirectional synchronization: Bulk → Individual
+ * Invalidates both bulk and individual query caches
+ */
+export function useSaveBulkWorkDays() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (entries: Array<[bigint, WorkDay]>) => {
+      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
+      await actor.addWorkDaysBulk(entries);
+      return entries;
+    },
+    onSuccess: async () => {
+      // BIDIRECTIONAL SYNC: Bulk → Individual
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
+      queryClient.invalidateQueries({ queryKey: ['workDay'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
+      
+      toast.success('Επιτυχία! Οι ώρες εργασίας αποθηκεύτηκαν για όλους τους εργαζομένους.', {
+        duration: 3000,
+        description: 'Η μισθοδοσία και το ημερολόγιο ενημερώθηκαν αυτόματα.',
+      });
+    },
+    onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την αποθήκευση', {
+        duration: 5000,
+        description: normalizedMessage,
+      });
+    },
+  });
+}
+
+/**
+ * Daily Bulk Work Days Entry Mutation
+ * Saves work hours for all employees for a specific date
+ * Ensures bidirectional synchronization with individual entry mode
+ */
+export function useSaveDailyBulkWorkDays() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ date, entries }: { date: string; entries: Array<[bigint, WorkDay]> }) => {
+      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
+      await actor.saveDailyBulkWorkDays(date, entries);
+      return { date, entries };
+    },
+    onSuccess: async () => {
+      // BIDIRECTIONAL SYNC: Daily Bulk → Individual & Monthly Bulk
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
+      queryClient.invalidateQueries({ queryKey: ['workDay'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
+      
+      toast.success('Επιτυχία! Οι ώρες εργασίας αποθηκεύτηκαν για όλους τους εργαζομένους.', {
+        duration: 3000,
+        description: 'Η μισθοδοσία, το ημερολόγιο και η μαζική καταχώρηση ενημερώθηκαν.',
+      });
+    },
+    onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την αποθήκευση', {
+        duration: 5000,
+        description: normalizedMessage,
       });
     },
   });
@@ -658,7 +693,7 @@ export function useGetAllEmployeesPayrollData(month: bigint, year: bigint) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
-    queryKey: ['payrollData', 'all', month.toString(), year.toString()],
+    queryKey: ['payrollData', month.toString(), year.toString()],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllEmployeesPayrollData(month, year);
@@ -689,6 +724,22 @@ export function useGetEmployeePayrollData(employeeId: bigint | null, month: bigi
 }
 
 // Leave Queries
+export function useGetLeaveRecord(employeeId: bigint | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<LeaveRecord | null>({
+    queryKey: ['leaveRecord', employeeId?.toString()],
+    queryFn: async () => {
+      if (!actor || !employeeId) return null;
+      return actor.getLeaveRecord(employeeId);
+    },
+    enabled: !!actor && !isFetching && employeeId !== null,
+    retry: 1,
+    retryDelay: 500,
+    staleTime: 30000,
+  });
+}
+
 export function useGetAllLeaveRecords() {
   const { actor, isFetching } = useActor();
 
@@ -707,50 +758,6 @@ export function useGetAllLeaveRecords() {
   });
 }
 
-export function useGetLeaveRecord(employeeId: bigint | null) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<LeaveRecord | null>({
-    queryKey: ['leaveRecord', employeeId?.toString()],
-    queryFn: async () => {
-      if (!actor || !employeeId) return null;
-      return actor.getLeaveRecord(employeeId);
-    },
-    enabled: !!actor && !isFetching && employeeId !== null,
-    retry: 1,
-    retryDelay: 500,
-    staleTime: 30000,
-  });
-}
-
-export function useUpdateLeaveDaysUsed() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ employeeId, newLeaveDaysUsed }: { employeeId: bigint; newLeaveDaysUsed: bigint }) => {
-      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.updateLeaveDaysUsed(employeeId, newLeaveDaysUsed);
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
-      
-      toast.success('Επιτυχία! Οι ημέρες άδειας ενημερώθηκαν.', {
-        duration: 3000,
-      });
-    },
-    onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την ενημέρωση', {
-        duration: 5000,
-        description: error.message,
-      });
-    },
-  });
-}
-
 export function useToggleLeaveDay() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -758,56 +765,30 @@ export function useToggleLeaveDay() {
   return useMutation({
     mutationFn: async ({ employeeId, date }: { employeeId: bigint; date: string }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.toggleLeaveDay(employeeId, date);
+      await actor.toggleLeaveDay(employeeId, date);
+      return { employeeId, date };
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
       queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['workDay'] });
       queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
       toast.success('Επιτυχία! Η άδεια ενημερώθηκε.', {
         duration: 3000,
+        description: 'Το υπόλοιπο αδειών και η μισθοδοσία επανυπολογίστηκαν.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την ενημέρωση', {
-        duration: 5000,
-        description: error.message,
-      });
-    },
-  });
-}
-
-export function useDeleteLeaveRecord() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ employeeId, date }: { employeeId: bigint; date: string }) => {
-      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.deleteLeaveRecord(employeeId, date);
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
-      queryClient.invalidateQueries({ queryKey: ['workDays'] });
-      queryClient.invalidateQueries({ queryKey: ['workDay'] });
-      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
       
-      toast.success('Επιτυχία! Η άδεια διαγράφηκε.', {
-        duration: 3000,
-      });
-    },
-    onError: (error: Error) => {
-      toast.error('Σφάλμα κατά τη διαγραφή', {
+      toast.error('Σφάλμα κατά την ενημέρωση άδειας', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -820,25 +801,99 @@ export function useAddBulkLeaveDay() {
   return useMutation({
     mutationFn: async (date: string) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.addBulkLeaveDay(date);
+      await actor.addBulkLeaveDay(date);
+      return date;
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
+      queryClient.invalidateQueries({ queryKey: ['workDay'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
+      
+      toast.success('Επιτυχία! Η άδεια προστέθηκε σε όλους τους εργαζομένους.', {
+        duration: 3000,
+        description: 'Τα υπόλοιπα αδειών και η μισθοδοσία ενημερώθηκαν.',
+      });
+    },
+    onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την προσθήκη άδειας', {
+        duration: 5000,
+        description: normalizedMessage,
+      });
+    },
+  });
+}
+
+export function useDeleteLeaveRecord() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, date }: { employeeId: bigint; date: string }) => {
+      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
+      await actor.deleteLeaveRecord(employeeId, date);
+      return { employeeId, date };
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
+      queryClient.invalidateQueries({ queryKey: ['workDay'] });
+      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollData'] });
+      queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
+      
+      toast.success('Επιτυχία! Η άδεια διαγράφηκε.', {
+        duration: 3000,
+        description: 'Το υπόλοιπο αδειών και η μισθοδοσία ενημερώθηκαν.',
+      });
+    },
+    onError: (error: Error) => {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά τη διαγραφή άδειας', {
+        duration: 5000,
+        description: normalizedMessage,
+      });
+    },
+  });
+}
+
+export function useUpdateLeaveDaysUsed() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, newLeaveDaysUsed }: { employeeId: bigint; newLeaveDaysUsed: bigint }) => {
+      if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
+      await actor.updateLeaveDaysUsed(employeeId, newLeaveDaysUsed);
+      return { employeeId, newLeaveDaysUsed };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
       queryClient.invalidateQueries({ queryKey: ['leaveRecord'] });
-      queryClient.invalidateQueries({ queryKey: ['workDays'] });
-      queryClient.invalidateQueries({ queryKey: ['workDay'] });
-      queryClient.invalidateQueries({ queryKey: ['dailyBulkWorkDays'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Η μαζική άδεια προστέθηκε για όλους τους εργαζομένους.', {
+      toast.success('Επιτυχία! Οι ημέρες άδειας ενημερώθηκαν.', {
         duration: 3000,
+        description: 'Η μισθοδοσία επανυπολογίστηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την προσθήκη μαζικής άδειας', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την ενημέρωση αδειών', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -851,7 +906,8 @@ export function useResetAllLeaveRecords() {
   return useMutation({
     mutationFn: async (newAnnualLeaveDays: bigint) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.resetAllLeaveRecords(newAnnualLeaveDays);
+      await actor.resetAllLeaveRecords(newAnnualLeaveDays);
+      return newAnnualLeaveDays;
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
@@ -861,12 +917,16 @@ export function useResetAllLeaveRecords() {
       
       toast.success('Επιτυχία! Όλες οι άδειες επαναφέρθηκαν.', {
         duration: 3000,
+        description: 'Η μισθοδοσία επανυπολογίστηκε για όλους τους εργαζομένους.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την επαναφορά', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την επαναφορά αδειών', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -893,7 +953,7 @@ export function useGetAllEmployeesPayments(month: bigint, year: bigint) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
-    queryKey: ['payments', 'all', month.toString(), year.toString()],
+    queryKey: ['allPayments', month.toString(), year.toString()],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getAllEmployeesPayments(month, year);
@@ -914,21 +974,27 @@ export function useAddPayment() {
   return useMutation({
     mutationFn: async (payment: PaymentRecord) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.addPayment(payment);
+      await actor.addPayment(payment);
+      return payment;
     },
-    onSuccess: async () => {
+    onSuccess: async (payment) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['allPayments'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Η πληρωμή προστέθηκε.', {
+      toast.success('Επιτυχία! Η πληρωμή καταχωρήθηκε.', {
         duration: 3000,
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την προσθήκη πληρωμής', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την καταχώρηση πληρωμής', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -941,21 +1007,27 @@ export function useAddPaymentsBulk() {
   return useMutation({
     mutationFn: async (payments: PaymentRecord[]) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.addPaymentsBulk(payments);
+      await actor.addPaymentsBulk(payments);
+      return payments;
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['allPayments'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Οι πληρωμές προστέθηκαν.', {
+      toast.success('Επιτυχία! Οι πληρωμές καταχωρήθηκαν για όλους τους εργαζομένους.', {
         duration: 3000,
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την προσθήκη πληρωμών', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την καταχώρηση πληρωμών', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -966,36 +1038,41 @@ export function useUpdatePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      employeeId, 
-      month, 
-      year, 
-      paymentDate, 
-      updatedPayment 
-    }: { 
-      employeeId: bigint; 
-      month: bigint; 
-      year: bigint; 
-      paymentDate: string; 
-      updatedPayment: PaymentRecord 
+    mutationFn: async ({
+      employeeId,
+      month,
+      year,
+      paymentDate,
+      updatedPayment,
+    }: {
+      employeeId: bigint;
+      month: bigint;
+      year: bigint;
+      paymentDate: string;
+      updatedPayment: PaymentRecord;
     }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.updatePayment(employeeId, month, year, paymentDate, updatedPayment);
+      await actor.updatePayment(employeeId, month, year, paymentDate, updatedPayment);
+      return { employeeId, month, year, paymentDate, updatedPayment };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['allPayments'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
       toast.success('Επιτυχία! Η πληρωμή ενημερώθηκε.', {
         duration: 3000,
-        description: 'Μόνο αυτή η συγκεκριμένη πληρωμή επηρεάστηκε. Οι υπόλοιπες πληρωμές παραμένουν αμετάβλητες.',
+        description: 'Η μισθοδοσία επανυπολογίστηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την ενημέρωση', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την ενημέρωση πληρωμής', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -1006,30 +1083,61 @@ export function useDeletePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, month, year, paymentDate }: { employeeId: bigint; month: bigint; year: bigint; paymentDate: string }) => {
+    mutationFn: async ({
+      employeeId,
+      month,
+      year,
+      paymentDate,
+    }: {
+      employeeId: bigint;
+      month: bigint;
+      year: bigint;
+      paymentDate: string;
+    }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.deletePayment(employeeId, month, year, paymentDate);
+      await actor.deletePayment(employeeId, month, year, paymentDate);
+      return { employeeId, month, year, paymentDate };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['allPayments'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
       toast.success('Επιτυχία! Η πληρωμή διαγράφηκε.', {
         duration: 3000,
-        description: 'Μόνο αυτή η συγκεκριμένη πληρωμή επηρεάστηκε. Οι υπόλοιπες πληρωμές παραμένουν αμετάβλητες.',
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά τη διαγραφή', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά τη διαγραφή πληρωμής', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
 }
 
 // Monthly Bank Salary Queries
+export function useGetMonthlyBankSalary(employeeId: bigint | null, month: bigint, year: bigint) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<number | null>({
+    queryKey: ['monthlyBankSalary', employeeId?.toString(), month.toString(), year.toString()],
+    queryFn: async () => {
+      if (!actor || !employeeId) return null;
+      return actor.getMonthlyBankSalary(employeeId, month, year);
+    },
+    enabled: !!actor && !isFetching && employeeId !== null,
+    retry: 1,
+    retryDelay: 500,
+    staleTime: 30000,
+  });
+}
+
 export function useGetAllMonthlyBankSalaries() {
   const { actor, isFetching } = useActor();
 
@@ -1053,23 +1161,39 @@ export function useSetMonthlyBankSalary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, month, year, amount }: { employeeId: bigint; month: bigint; year: bigint; amount: number }) => {
+    mutationFn: async ({
+      employeeId,
+      month,
+      year,
+      amount,
+    }: {
+      employeeId: bigint;
+      month: bigint;
+      year: bigint;
+      amount: number;
+    }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.setMonthlyBankSalary(employeeId, month, year, amount);
+      await actor.setMonthlyBankSalary(employeeId, month, year, amount);
+      return { employeeId, month, year, amount };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyBankSalary'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Ο μηνιαίος μισθός τράπεζας προστέθηκε.', {
+      toast.success('Επιτυχία! Ο μισθός τράπεζας καταχωρήθηκε.', {
         duration: 3000,
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την προσθήκη', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την καταχώρηση μισθού τράπεζας', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -1082,21 +1206,27 @@ export function useSetMonthlyBankSalariesBulk() {
   return useMutation({
     mutationFn: async (salaries: Array<[bigint, bigint, bigint, number]>) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.setMonthlyBankSalariesBulk(salaries);
+      await actor.setMonthlyBankSalariesBulk(salaries);
+      return salaries;
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyBankSalary'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Οι μηνιαίοι μισθοί τράπεζας προστέθηκαν.', {
+      toast.success('Επιτυχία! Οι μισθοί τράπεζας καταχωρήθηκαν για όλους τους εργαζομένους.', {
         duration: 3000,
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την προσθήκη', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την καταχώρηση μισθών τράπεζας', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -1107,23 +1237,41 @@ export function useUpdateMonthlyBankSalary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, employeeId, month, year, amount }: { id: bigint; employeeId: bigint; month: bigint; year: bigint; amount: number }) => {
+    mutationFn: async ({
+      id,
+      employeeId,
+      month,
+      year,
+      amount,
+    }: {
+      id: bigint;
+      employeeId: bigint;
+      month: bigint;
+      year: bigint;
+      amount: number;
+    }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.updateMonthlyBankSalary(id, employeeId, month, year, amount);
+      await actor.updateMonthlyBankSalary(id, employeeId, month, year, amount);
+      return { id, employeeId, month, year, amount };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyBankSalary'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Ο μηνιαίος μισθός τράπεζας ενημερώθηκε.', {
+      toast.success('Επιτυχία! Ο μισθός τράπεζας ενημερώθηκε.', {
         duration: 3000,
+        description: 'Η μισθοδοσία επανυπολογίστηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά την ενημέρωση', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά την ενημέρωση μισθού τράπεζας', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
@@ -1134,25 +1282,40 @@ export function useDeleteMonthlyBankSalary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, employeeId, month, year }: { id: bigint; employeeId: bigint; month: bigint; year: bigint }) => {
+    mutationFn: async ({
+      id,
+      employeeId,
+      month,
+      year,
+    }: {
+      id: bigint;
+      employeeId: bigint;
+      month: bigint;
+      year: bigint;
+    }) => {
       if (!actor) throw new Error('Η σύνδεση με το σύστημα δεν είναι διαθέσιμη');
-      return actor.deleteMonthlyBankSalary(id, employeeId, month, year);
+      await actor.deleteMonthlyBankSalary(id, employeeId, month, year);
+      return { id, employeeId, month, year };
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyBankSalary'] });
       queryClient.invalidateQueries({ queryKey: ['payrollData'] });
       queryClient.invalidateQueries({ queryKey: ['payrollDataWithCarryover'] });
       
-      toast.success('Επιτυχία! Ο μηνιαίος μισθός τράπεζας διαγράφηκε.', {
+      toast.success('Επιτυχία! Ο μισθός τράπεζας διαγράφηκε.', {
         duration: 3000,
+        description: 'Η μισθοδοσία ενημερώθηκε αυτόματα.',
       });
     },
     onError: (error: Error) => {
-      toast.error('Σφάλμα κατά τη διαγραφή', {
+      // Normalize error message
+      const normalizedMessage = normalizeErrorMessage(error);
+      
+      toast.error('Σφάλμα κατά τη διαγραφή μισθού τράπεζας', {
         duration: 5000,
-        description: error.message,
+        description: normalizedMessage,
       });
     },
   });
 }
-

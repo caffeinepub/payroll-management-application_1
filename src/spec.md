@@ -1,13 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Ensure bidirectional synchronization between Individual and Daily Bulk work-hour entry flows in the Employee Calendar, with payroll recalculation reflecting the latest saved hours.
+**Goal:** Remove blocking authorization errors so anyone opening the app via link can use it and add employees, while keeping admin-only operations restricted.
 
 **Planned changes:**
-- Backend: Store and serve work-hour entries (normal hours, overtime, and leave status) from a single source of truth so saves from either Individual or Bulk immediately appear in the other view for the same date.
-- Backend: Trigger payroll recalculation when hours are added/updated via either Individual workday saving or Bulk daily saving, so payroll queries return updated totals without extra user actions.
-- Backend: Update the Daily Bulk retrieval API to return the currently stored per-employee WorkDay values for the requested date (consistent with Individual workday retrieval).
-- Frontend: On successful Bulk Daily save, invalidate/refresh both bulk daily and individual workday React Query cache keys so the Individual calendar updates immediately after bulk saves.
-- Keep all other functionality and UI behavior unchanged outside this synchronization and dependent payroll refresh behavior.
+- Update backend authorization to allow anonymous/non-admin callers to access Employees page-required methods and successfully run the addEmployee flow without triggering “Only users/admins can perform this action” traps.
+- Ensure admin-only backend operations remain restricted and continue to fail for non-admin callers.
+- Adjust frontend handling (without UI/layout changes) so the previous authorization error strings are no longer shown during normal flows once backend authorization is corrected.
 
-**User-visible outcome:** Saving hours/leave in either the Individual calendar dialog or the Daily Bulk table is immediately reflected in the other view for the same date, and payroll screens reflect updated totals right after saving.
+**User-visible outcome:** Anyone with the app link can open the app and add employees successfully without seeing authorization error messages; admin-only actions remain unavailable to non-admin users.

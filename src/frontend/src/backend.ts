@@ -253,9 +253,6 @@ export interface backendInterface {
     initializeAccessControl(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
-    /**
-     * / Reset all employee leave records at the beginning of the year (January).
-     */
     resetAllLeaveRecords(newAnnualLeaveDays: bigint): Promise<void>;
     resetLeaveRecord(employeeId: bigint, newAnnualLeaveDays: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
@@ -267,9 +264,6 @@ export interface backendInterface {
     toggleLeaveDay(employeeId: bigint, date: string): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateEmployeeWithChangeLog(employeeId: bigint, updatedEmployee: Employee): Promise<void>;
-    /**
-     * / Updates leave record using the new value, adjusting the `leaveDaysUsed` and `remainingLeaveDays` accordingly.
-     */
     updateLeaveDaysUsed(employeeId: bigint, newLeaveDaysUsed: bigint): Promise<void>;
     updateMonthlyBankSalary(id: bigint, employeeId: bigint, month: bigint, year: bigint, amount: number): Promise<void>;
     updatePayment(employeeId: bigint, month: bigint, year: bigint, paymentDate: string, updatedPayment: PaymentRecord): Promise<void>;

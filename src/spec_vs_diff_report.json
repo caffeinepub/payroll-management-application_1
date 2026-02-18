@@ -1,92 +1,26 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T14:03:33.844Z",
-  "summary": "Diff includes migration work to remove `dailyBulkEntries` from backend state and substantial frontend edits across multiple unrelated components/pages. The changes appear to go beyond the requested Employee Calendar sync scope and also modify a frontend “immutable path” file, violating stated constraints. Backend sync/payroll behavior cannot be fully verified from the truncated backend diff.",
+  "generatedAt": "2026-02-17T09:50:11.731Z",
+  "summary": "Frontend adds an error-normalization utility and wires it into query/mutation error handling (and Employees delete flow) to avoid showing raw authorization-trap strings. Backend diff excerpt shows access-control initialization/query helpers but does not provide evidence that the specific authorization checks for opening the app / Employees page calls / addEmployee were changed to allow any caller, while keeping admin-only operations restricted.",
   "missing_requirements": [
     {
-      "id": "REQ-5",
-      "requirement": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
-      "reason": "The diff shows modifications to multiple components/pages unrelated to Employee Calendar sync (e.g., payments, monthly bank salaries dialogs) and adds project-level tracking docs/state, indicating broader changes than requested.",
+      "id": "REQ-2",
+      "requirement": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially add-employee), while keeping admin-only restrictions intact for admin-only operations.",
+      "reason": "The provided backend diff excerpt shows added AccessControl initialization and role-query/assignment methods, but it does not show changes to the authorization logic of addEmployee or the other backend methods required by the Employees page, nor evidence that admin-only operations remain restricted. With the backend file truncated and no specific method-level auth changes shown, implementation of the required authorization behavior cannot be confirmed.",
       "evidence": [
-        "frontend/src/pages/PaymentsPage.tsx",
-        "frontend/src/components/BulkPaymentEntryTable.tsx",
-        "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx",
-        "project_state.json",
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "requirement": "Do not edit any files under frontend immutable paths (e.g., frontend/src/hooks/useInternetIdentity.ts).",
-      "reason": "An immutable-path file listed in the constraints is modified in the diff.",
-      "evidence": [
-        "frontend/src/hooks/useInternetIdentity.ts"
-      ]
-    },
-    {
-      "requirement": "Use English for any user-facing text in this build request.",
-      "reason": "Modified UI components contain Greek user-facing strings in the shown diff excerpts, conflicting with the constraint to use English user-facing text for this build.",
-      "evidence": [
-        "frontend/src/components/LeaveDayDialog.tsx",
-        "frontend/src/components/BulkLeaveDayDialog.tsx",
-        "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx",
-        "frontend/src/pages/PaymentsPage.tsx",
-        "frontend/src/components/BulkPaymentEntryTable.tsx"
+        "backend/main.mo (truncated excerpt shows AccessControl init and helper methods only; no shown addEmployee/auth-guard changes)"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Changes to authentication/Internet Identity hook behavior/options.",
-      "reason": "Not requested by any requirement; additionally, the file is explicitly listed as immutable in constraints.",
-      "evidence": [
-        "frontend/src/hooks/useInternetIdentity.ts"
-      ]
-    },
-    {
-      "description": "Payments feature updates/additions (bulk payment entry table and Payments page changes).",
-      "reason": "Out of scope; the build request is limited to Employee Calendar synchronization and dependent payroll refresh.",
-      "evidence": [
-        "frontend/src/components/BulkPaymentEntryTable.tsx",
-        "frontend/src/pages/PaymentsPage.tsx"
-      ]
-    },
-    {
-      "description": "Bulk monthly bank salary dialog changes.",
-      "reason": "Not requested; unrelated to Employee Calendar work-hour sync.",
-      "evidence": [
-        "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx"
-      ]
-    },
-    {
-      "description": "General-purpose numeric formatting and Greek change-history description helpers added/changed in query hooks.",
-      "reason": "Not requested as part of the calendar sync requirements; indicates broader refactors/feature work.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    },
-    {
-      "description": "Added project tracking/state file and additional documentation file beyond implementation.",
-      "reason": "Not requested deliverables; may be acceptable as internal docs, but not specified in the build request and could violate the 'no other changes' requirement depending on repo policy.",
-      "evidence": [
-        "project_state.json",
-        "frontend/src/docs/employee-calendar-sync.md"
-      ]
-    }
-  ],
-  "confidence": 0.72,
+  "hallucinated_features": [],
+  "confidence": 0.6,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/BulkLeaveDayDialog.tsx",
-    "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx",
-    "frontend/src/components/BulkPaymentEntryTable.tsx",
-    "frontend/src/components/LeaveDayDialog.tsx",
-    "frontend/src/docs/employee-calendar-sync.md",
-    "frontend/src/hooks/useInternetIdentity.ts",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/PaymentsPage.tsx",
+    "frontend/src/pages/EmployeesPage.tsx",
+    "frontend/src/utils/errors.ts",
     "project_state.json"
   ]
 }

@@ -1,26 +1,22 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "App feature request: ensure Employee Calendar time entries stay synchronized between individual and bulk entry, and update payroll accordingly.",
+  "projectStateVersion": 5,
+  "summary": "Adjust access control so the app can be used by anyone with the link (no admin/user restriction errors), while keeping all other UI and functionality unchanged.",
   "architectural_notes": [
-    "Scope constraint: do not change anything else in the application or its existing functionality beyond the time-entry/payroll synchronization."
+    "Adjust authorization/role permissions for the 'add employee' action to allow regular users (not only admins).",
+    "User requests link-based open access (remove admin/user role restrictions) while keeping all other UI/functionality unchanged; reconcile with existing authenticated-user-only add-employee requirement."
   ],
-  "known_issues": [],
+  "known_issues": [
+    "Adding an employee fails for non-admin users with: \"Unauthorized: Only admins can perform this action\".",
+    "Users encounter authorization errors such as 'Only users can perform this action' / 'Only admin' that block adding employees and using the app."
+  ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-frontend-when-saving-hours-via-the-bulk-daily-entry-mutation-invalidate-react-query-refresh-the-individual-calendar-workday-queries-and-any-per-day-query-keys-in-addition-to-bulk-query-keys-so-the-individual-calendar-view-is-updated-immediately-after-bulk-saves",
-      "title": "Frontend: When saving hours via the Bulk Daily entry mutation, invalidate/react-query-refresh the Individual calendar workday queries (and any per-day query keys) in addition to bulk query keys, so the Individual calendar view is updated immediately after bulk saves.",
+      "id": "feature-ensure-the-frontend-does-not-display-the-authorization-error-strings-e-g-only-users-can-perform-this-action-during-normal-usage-flows-especially-employee-creation-once-backend-authorization-is-corrected-without-changing-the-ui-layout-design-or-any-existing-features",
+      "title": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
       "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-do-not-introduce-any-other-functional-or-ui-changes-outside-the-employee-calendar-synchronization-behavior-described-here",
-      "title": "Do not introduce any other functional or UI changes outside the Employee Calendar synchronization behavior described here.",
-      "reqIds": [
-        "REQ-5"
+        "REQ-3"
       ],
       "version": 1
     }
@@ -28,13 +24,13 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "In Employee Calendar, synchronize hours between Individual Time Entry and Bulk Time Entry bidirectionally; ensure payroll updates accordingly when hours are added/edited in either place.",
+      "summary": "Fix add-employee flow so non-admin users can add employees without 'Unauthorized: Only admins can perform this action' error (do not change other app functionality).",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Backend: Make work-hour entries a single source of truth so that saving a WorkDay from the Individual entry flow immediately appears in the Daily Bulk entry view for the same date (and vice versa). This must work for normal hours, overtime hours, and leave status.",
+      "summary": "Update the backend authorization for the employee creation endpoint so that any authenticated user (user role/permission) can successfully add an employee without receiving the error \"Unauthorized: Only admins can perform this action\". This change must be limited strictly to the add-employee operation and must not alter authorization rules or behavior for any other operations (e.g., updating/deleting employees, adding work days, leave edits, payroll changes, Stripe configuration).",
       "reqIds": [
         "REQ-1"
       ],
@@ -42,22 +38,20 @@
     },
     {
       "id": "AR-3",
-      "summary": "Backend: Ensure payroll recalculation runs when hours are added/updated through either Individual workday saving or Bulk daily saving, so payroll screens reflect the latest hours.",
-      "reqIds": [
-        "REQ-2"
-      ],
+      "summary": "Allow anyone with the link to use the app without role-based access restrictions; remove/avoid 'Only admin' and 'Only users can perform this action' errors so employee addition and core functions work, without changing any other UI or functionality.",
+      "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Backend: Update the Daily Bulk retrieval API so it returns the currently stored per-employee WorkDay values for the requested date (not stale/isolated bulk-only storage), ensuring the Bulk UI always displays the same data as the Individual calendar.",
+      "summary": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps that produce the messages \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially the add-employee flow), while keeping admin-only restrictions intact for admin-only operations (e.g., updating/deleting employees, work day edits, Stripe configuration).",
       "reqIds": [
-        "REQ-3"
+        "REQ-2"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Bidirectional sync between Individual and Bulk work-hour entries in Employee Calendar",
+  "projectName": "Payroll Manager",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
