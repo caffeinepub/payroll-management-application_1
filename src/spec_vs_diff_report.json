@@ -1,26 +1,19 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T09:50:11.731Z",
-  "summary": "Frontend adds an error-normalization utility and wires it into query/mutation error handling (and Employees delete flow) to avoid showing raw authorization-trap strings. Backend diff excerpt shows access-control initialization/query helpers but does not provide evidence that the specific authorization checks for opening the app / Employees page calls / addEmployee were changed to allow any caller, while keeping admin-only operations restricted.",
-  "missing_requirements": [
-    {
-      "id": "REQ-2",
-      "requirement": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially add-employee), while keeping admin-only restrictions intact for admin-only operations.",
-      "reason": "The provided backend diff excerpt shows added AccessControl initialization and role-query/assignment methods, but it does not show changes to the authorization logic of addEmployee or the other backend methods required by the Employees page, nor evidence that admin-only operations remain restricted. With the backend file truncated and no specific method-level auth changes shown, implementation of the required authorization behavior cannot be confirmed.",
-      "evidence": [
-        "backend/main.mo (truncated excerpt shows AccessControl init and helper methods only; no shown addEmployee/auth-guard changes)"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-24T07:14:47.239Z",
+  "summary": "The diff shows comprehensive implementation of leave day calculations as 8 regular work hours across both backend and frontend. The backend (main.mo) includes logic for handling leave days for both hourly and monthly employees. The frontend includes informational messages in dialogs (WorkDayDialog, LeaveDayDialog, BulkLeaveDayDialog, DailyBulkEntryTable) explaining the 8-hour calculation. All three requirements appear to be implemented with appropriate UI messaging and backend logic.",
+  "missing_requirements": [],
   "hallucinated_features": [],
-  "confidence": 0.6,
+  "confidence": 0.85,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/EmployeesPage.tsx",
-    "frontend/src/utils/errors.ts",
+    "frontend/src/components/BulkLeaveDayDialog.tsx",
+    "frontend/src/components/DailyBulkEntryTable.tsx",
+    "frontend/src/components/LeaveDayDialog.tsx",
+    "frontend/src/components/WorkDayDialog.tsx",
+    "frontend/src/pages/CalendarPage.tsx",
     "project_state.json"
   ]
 }

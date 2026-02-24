@@ -1,11 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Remove blocking authorization errors so anyone opening the app via link can use it and add employees, while keeping admin-only operations restricted.
+**Goal:** Fix leave day calculation to count as 8 regular work hours and update payroll and leave balances accordingly.
 
 **Planned changes:**
-- Update backend authorization to allow anonymous/non-admin callers to access Employees page-required methods and successfully run the addEmployee flow without triggering “Only users/admins can perform this action” traps.
-- Ensure admin-only backend operations remain restricted and continue to fail for non-admin callers.
-- Adjust frontend handling (without UI/layout changes) so the previous authorization error strings are no longer shown during normal flows once backend authorization is corrected.
+- Calculate leave days as 8 hours of regular work when added to employee calendar
+- For hourly employees: add 8 hours × hourly rate to payroll calculations
+- For monthly employees: deduct 1 day from leave balance without affecting salary
+- Update leave balance immediately when leave is added
+- Ensure payroll data reflects leave day additions in salary calculations
 
-**User-visible outcome:** Anyone with the app link can open the app and add employees successfully without seeing authorization error messages; admin-only actions remain unavailable to non-admin users.
+**User-visible outcome:** When adding a leave day to an employee in the calendar (individual or bulk entry), the system will correctly calculate it as 8 regular work hours, automatically updating the employee's payroll and leave balance based on their employment type (hourly or monthly).

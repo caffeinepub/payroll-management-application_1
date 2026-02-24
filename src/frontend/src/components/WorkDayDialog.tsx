@@ -20,7 +20,7 @@ interface WorkDayDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   employeeId: bigint;
-  date: Date;
+  date: string;
   existingWorkDay?: WorkDay;
 }
 
@@ -93,15 +93,9 @@ export default function WorkDayDialog({
       }
     }
 
-    // Format date as YYYY-MM-DD for backend (backend expects this format)
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-
     // For leave days, backend expects 8 hours as normalHours
     const workDay: WorkDay = {
-      date: dateStr,
+      date: date,
       normalHours: isLeave ? 8 : parseDecimal(normalHours) || 0,
       overtimeHours: isLeave ? 0 : parseDecimal(overtimeHours) || 0,
       isLeave,
@@ -117,11 +111,13 @@ export default function WorkDayDialog({
     }
   };
 
-  const formatDateDisplay = (date: Date): string => {
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  const formatDateDisplay = (dateStr: string): string => {
+    // Convert YYYY-MM-DD to DD/MM/YYYY
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
   };
 
   return (
@@ -159,7 +155,7 @@ export default function WorkDayDialog({
               htmlFor="isLeave"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              Ημέρα Άδειας (υπολογίζεται ως 8 ώρες και αφαιρείται από το υπόλοιπο αδειών)
+              Ημέρα Άδειας
             </Label>
           </div>
 
@@ -167,7 +163,7 @@ export default function WorkDayDialog({
             <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
               <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <AlertDescription className="text-sm text-amber-700 dark:text-amber-300">
-                Η άδεια θα καταχωρηθεί αυτόματα στο σύστημα αδειών και θα αφαιρεθεί 1 ημέρα από το υπόλοιπο διαθέσιμων αδειών του εργαζομένου.
+                Η άδεια υπολογίζεται ως 8 ώρες κανονικής εργασίας. Για ωριαίους εργαζόμενους, προστίθενται 8 ώρες × ωριαία αμοιβή στη μισθοδοσία. Για μηνιαίους εργαζόμενους, αφαιρείται 1 ημέρα από το υπόλοιπο άδειας.
               </AlertDescription>
             </Alert>
           )}

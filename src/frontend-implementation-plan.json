@@ -1,32 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Payroll Manager – Suppress authorization trap strings in normal flows",
-  "requirements": [
-    {
-      "id": "REQ-3",
-      "summary": "Prevent raw backend authorization trap strings from being shown in toasts/messages during normal use flows (especially add-employee) without changing layout or features.",
-      "acceptanceCriteria": [
-        "After the backend fix, adding an employee from the Employees page completes successfully and no authorization error toast/message is shown.",
-        "No visual redesign or feature changes are introduced; the existing pages/components remain functionally the same aside from the removed blocking auth errors."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/errors.ts",
-          "operation": "create",
-          "description": "Add a small error-normalization helper that strips or replaces backend trap messages containing authorization strings (e.g., \"Unauthorized: Only users can perform this action\", \"Unauthorized: Only admins can perform this action\") so the UI never renders these raw strings. Keep behavior minimal and text-only to avoid any UI/layout changes."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Use the new error-normalization helper when building toast error descriptions (and any thrown Error messages) so mutation/query error toasts do not surface the raw authorization trap strings. Ensure addEmployee and related mutations show either no toast on success (unchanged) or a sanitized, non-auth-string message on failure."
-        },
-        {
-          "path": "frontend/src/pages/EmployeesPage.tsx",
-          "operation": "modify",
-          "description": "Update delete flow error handling to use the shared error-normalization helper instead of rendering error.message directly, preventing authorization trap strings from appearing if encountered."
-        }
-      ]
-    }
-  ]
+  "title": "Fix leave day calculation to count as 8 regular work hours",
+  "requirements": []
 }

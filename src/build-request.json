@@ -1,56 +1,74 @@
 {
   "kind": "build_request",
-  "title": "Fix authorization errors so anyone with the link can add employees and use the app",
-  "projectName": "Payroll Manager",
-  "priority": "high",
+  "title": "Fix leave day calculation to count as 8 regular work hours",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-2",
-      "text": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps that produce the messages \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially the add-employee flow), while keeping admin-only restrictions intact for admin-only operations (e.g., updating/deleting employees, work day edits, Stripe configuration).",
+      "id": "REQ-1",
+      "text": "When a leave day is added to an employee in the employee calendar (via individual entry or bulk entry), calculate it as 8 hours of regular work and update the employee's payroll and leave balance accordingly",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-20"
         ],
         "quotes": [
-          "ΔΙΟΡΘΩΣΕ ΤΑ ΣΦΑΜΛΑΤΑ ONLY ADMIN ΚΑΙ ONLY USERS ACCESS AND CAN PERFROM THIS ACTION ... ΩΣΤΕ ... ΝΑ ΜΠΟΡΕΙ ΝΑ ΚΑΝΕΙ ΠΡΟΣΘΗΚΗ ΕΡΓΑΖΟΜΕΝΩΝ ΚΑΙ ΝΑ ΛΕΙΤΟΥΡΓΙΣΕΙ ΤΗΝ ΕΦΑΡΜΟΓΗ. ΜΗΝ ΑΛΛΑΞΕΙΣ ΤΙΠΟΤΑ ΑΛΛΟ ..."
+          "Οταν προστιθεται \"αδεια\" σε εργαζομενο στο ημερολογιο εργαζομενων, η αδεια αυτη να υπλογιζεται σαν 8 ωρες κανονικης εργασιας και να ενηεμερωνεται η μισθοδοσια του εργαζομενου και οι αδειες του"
         ]
       },
       "acceptanceCriteria": [
-        "A user can open the app via link and successfully call backend methods required for the Employees page without receiving any \"Unauthorized: Only users...\" traps.",
-        "Calling addEmployee from the frontend succeeds for non-admin/non-assigned users and does not return/trap with \"Unauthorized: Only users can perform this action\".",
-        "Admin-only operations (those currently guarded by #admin checks, e.g., updateEmployeeWithChangeLog, deleteEmployee, addWorkDay, setStripeConfiguration) remain restricted and still fail for non-admin callers.",
-        "No other backend behaviors (data validation, payroll recalculation side effects, ID assignment) are changed for addEmployee beyond the authorization behavior."
+        "For hourly employees: leave day adds 8 regular hours × hourly rate to payroll calculations",
+        "For monthly employees: leave day deducts 1 day from total leave balance",
+        "Leave balance is updated immediately when leave is added",
+        "Payroll data reflects the leave day addition in salary calculations"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "For hourly employees, calculate leave day payment as 8 regular work hours multiplied by their hourly rate",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Στον ωριαιο εργαζομενο η προσθηλκη αδειας υπολογιζεται σαν 8 κανονικες ωρες εργασιας επι την ωριαια αμοιβη του"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Hourly employee leave day = 8 hours × hourly_rate in payroll",
+        "Leave balance decreases by 1 day for hourly employees"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
-      "target": "frontend",
+      "text": "For monthly employees, deduct 1 day from their total leave balance when a leave day is added, without affecting salary calculation",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-20"
         ],
         "quotes": [
-          "ΔΙΟΡΘΩΣΕ ΤΑ ΣΦΑΜΛΑΤΑ ONLY ADMIN ΚΑΙ ONLY USERS ACCESS AND CAN PERFROM THIS ACTION ..."
+          "στον μηνιαιο εργαζομενο απλα αφαιρειται μια ημερας αδειας απο την συνολικη του αδεια"
         ]
       },
       "acceptanceCriteria": [
-        "After the backend fix, adding an employee from the Employees page completes successfully and no authorization error toast/message is shown.",
-        "No visual redesign or feature changes are introduced; the existing pages/components remain functionally the same aside from the removed blocking auth errors."
+        "Monthly employee leave day deducts 1 day from leave balance",
+        "No hourly calculation for monthly employees on leave days",
+        "Salary calculation for monthly employees remains unaffected by individual leave days"
       ]
     }
   ],
   "constraints": [
-    "Do not change any UI appearance, navigation, or features beyond what is necessary to eliminate the blocking authorization errors described by the user.",
-    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
-    "Do not relax or modify admin-only authorization rules for operations other than what is necessary to let any user add employees and use the app normally.",
-    "Do not edit any files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT."
+    "Do not modify any other application functionality",
+    "Do not change the appearance or UI of the application",
+    "Do not alter other calculations or features beyond leave day handling"
   ],
   "nonGoals": [
-    "Adding new roles/permissions UI for managing admins/users.",
-    "Adding third-party authentication providers or changing Internet Identity integration.",
-    "Implementing new app features unrelated to fixing the reported authorization errors."
+    "Modifying the calendar UI or layout",
+    "Changing how work hours are entered or displayed",
+    "Altering payment entry workflows",
+    "Modifying employee management features",
+    "Changing payroll display or reporting beyond leave calculations"
   ],
   "imageRequirements": {
     "required": [],

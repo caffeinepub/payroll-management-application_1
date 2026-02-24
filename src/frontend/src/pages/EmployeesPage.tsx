@@ -19,7 +19,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { normalizeErrorMessage } from '../utils/errors';
 
 export default function EmployeesPage() {
   const { data: employees = [], isLoading, isFetching } = useGetAllEmployees();
@@ -73,9 +72,7 @@ export default function EmployeesPage() {
       setDeleteDialogOpen(false);
       setEmployeeToDelete(null);
     } catch (error: any) {
-      // Normalize error message to strip authorization trap strings
-      const normalizedMessage = normalizeErrorMessage(error);
-      toast.error(normalizedMessage);
+      toast.error(error.message || 'Σφάλμα κατά τη διαγραφή του εργαζομένου');
     }
   };
 

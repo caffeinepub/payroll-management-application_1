@@ -7,32 +7,12 @@ import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Stripe "stripe/stripe";
-import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
+import OutCall "http-outcalls/outcall";
+
+
 
 actor {
-  // ============================================================================
-  // ACCESS CONTROL INITIALIZATION
-  // ============================================================================
-
-  let accessControlState = AccessControl.initState();
-
-  public shared ({ caller }) func initializeAccessControl() : async () {
-    AccessControl.initialize(accessControlState, caller);
-  };
-
-  public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
-    AccessControl.getUserRole(accessControlState, caller);
-  };
-
-  public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
-    AccessControl.assignRole(accessControlState, caller, user, role);
-  };
-
-  public query ({ caller }) func isCallerAdmin() : async Bool {
-    AccessControl.isAdmin(accessControlState, caller);
-  };
-
   // ============================================================================
   // MAP INITIALIZATIONS
   // ============================================================================
@@ -115,9 +95,9 @@ actor {
   };
 
   public type ChangeHistoryEntry = {
-    date : Text;
-    changeType : Text;
-    description : Text;
+    date : Text; // Date of the change
+    changeType : Text; // Type of change (hourlyRate, overtimeRate, salary, leave)
+    description : Text; // Description in Greek (e.g., "Ωριαία αμοιβή από 5 € σε 6 €")
   };
 
   public type ChangeHistory = [ChangeHistoryEntry];
@@ -168,12 +148,30 @@ actor {
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
 
   // ============================================================================
-  // USER PROFILE FUNCTIONS
+  // ACCESS CONTROL & AUTHORIZATION
   // ============================================================================
+
+  let accessControlState = AccessControl.initState();
+
+  public shared ({ caller }) func initializeAccessControl() : async () {
+    AccessControl.initialize(accessControlState, caller);
+  };
+
+  public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
+    AccessControl.getUserRole(accessControlState, caller);
+  };
+
+  public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
+    AccessControl.assignRole(accessControlState, caller, user, role);
+  };
+
+  public query ({ caller }) func isCallerAdmin() : async Bool {
+    AccessControl.isAdmin(accessControlState, caller);
+  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Debug.trap("Unauthorized: Only users can access profiles");
+      Debug.trap("Unauthorized: Only users can view profiles");
     };
     principalMap.get(userProfiles, caller);
   };
@@ -196,12 +194,15 @@ actor {
   // STRIPE INTEGRATION FUNCTIONS
   // ============================================================================
 
-  public query func isStripeConfigured() : async Bool {
+  public query ({ caller }) func isStripeConfigured() : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     stripeConfiguration != null;
   };
 
   public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
     stripeConfiguration := ?config;
@@ -209,6 +210,7 @@ actor {
 
   func getStripeConfiguration() : Stripe.StripeConfiguration {
     switch (stripeConfiguration) {
+
       case (null) { Debug.trap("Stripe χρειάζεται να ρυθμιστεί πρώτα") };
       case (?value) { value };
     };
@@ -219,6 +221,9 @@ actor {
   };
 
   public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
   };
 
@@ -268,10 +273,10 @@ actor {
   };
 
   // ============================================================================
-  // EMPLOYEE MANAGEMENT FUNCTIONS
+  // EMPLOYEE MANAGEMENT FUNCTIONS - ADMIN ONLY
   // ============================================================================
 
-  public shared func addEmployee(
+  public shared ({ caller }) func addEmployee(
     fullName : Text,
     hourlyRate : Text,
     overtimeRate : Text,
@@ -282,13 +287,16 @@ actor {
     bankIban : ?Text,
     employeeType : Text,
   ) : async Nat {
-    // No authorization check - open to all callers per implementation plan
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
+
     if (Text.size(fullName) == 0) {
       Debug.trap("Το όνομα είναι υποχρεωτικό");
     };
 
     if (employeeType != "monthly" and employeeType != "hourly") {
-      Debug.trap("Ο τύπος εργαζομένου πρέπει να είναι 'monthly' ή 'hourly'");
+      Debug.trap("Ο τύπος εργαζομένου πρέπει να είναι `monthly` ή `hourly`");
     };
 
     let parsedHourlyRate = switch (employeeType) {
@@ -373,7 +381,7 @@ actor {
   };
 
   public shared ({ caller }) func updateEmployeeWithChangeLog(employeeId : Nat, updatedEmployee : Employee) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -381,7 +389,7 @@ actor {
       case (null) {
         Debug.trap("Ο εργαζόμενος δεν βρέθηκε");
       };
-      case (?_) {
+      case (?existingEmployee) {
         let changeEntries : [ChangeHistoryEntry] = switch (natMap.get(changeHistories, employeeId)) {
           case (null) { [] };
           case (?existingHistory) { existingHistory };
@@ -397,13 +405,16 @@ actor {
   };
 
   public shared ({ caller }) func setChangeHistoryLog(employeeId : Nat, newChangeHistory : ChangeHistory) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
     changeHistories := natMap.put(changeHistories, employeeId, newChangeHistory);
   };
 
   public query ({ caller }) func getChangeHistoryLog(employeeId : Nat) : async ChangeHistory {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     switch (natMap.get(changeHistories, employeeId)) {
       case (null) { [] };
       case (?history) { history };
@@ -411,7 +422,7 @@ actor {
   };
 
   public shared ({ caller }) func deleteEmployee(employeeId : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
     changeHistories := natMap.delete(changeHistories, employeeId);
@@ -424,11 +435,17 @@ actor {
     payrollBalances := natMap.delete(payrollBalances, employeeId);
   };
 
-  public query func getAllEmployees() : async [Employee] {
+  public query ({ caller }) func getAllEmployees() : async [Employee] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     Iter.toArray(natMap.vals(employees));
   };
 
-  public query func getEmployee(employeeId : Nat) : async ?Employee {
+  public query ({ caller }) func getEmployee(employeeId : Nat) : async ?Employee {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     natMap.get(employees, employeeId);
   };
 
@@ -437,7 +454,7 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func updateLeaveDaysUsed(employeeId : Nat, newLeaveDaysUsed : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -474,40 +491,22 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func addWorkDay(employeeId : Nat, workDay : WorkDay) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
-    let adjustedWorkDay = adjustLeaveHoursForHourlyEmployees(employeeId, workDay);
     let employeeWorkDays = switch (natMap.get(workDays, employeeId)) {
       case (null) { textMap.empty<WorkDay>() };
       case (?days) { days };
     };
-    let updatedWorkDays = textMap.put(employeeWorkDays, adjustedWorkDay.date, adjustedWorkDay);
+    let updatedWorkDays = textMap.put(employeeWorkDays, workDay.date, workDay);
     workDays := natMap.put(workDays, employeeId, updatedWorkDays);
 
-    if (adjustedWorkDay.isLeave) {
-      await updateLeaveRecordFromWorkDay(employeeId, adjustedWorkDay.date);
+    if (workDay.isLeave) {
+      await updateLeaveRecordFromWorkDay(employeeId, workDay.date);
     };
 
     await calculateAndUpdatePayroll();
-  };
-
-  func adjustLeaveHoursForHourlyEmployees(employeeId : Nat, workDay : WorkDay) : WorkDay {
-    switch (natMap.get(employees, employeeId)) {
-      case (null) { workDay };
-      case (?employee) {
-        if (workDay.isLeave and employee.employeeType == "hourly") {
-          {
-            workDay with
-            normalHours = 8.0;
-            overtimeHours = 0.0;
-          };
-        } else {
-          workDay;
-        };
-      };
-    };
   };
 
   func updateLeaveRecordFromWorkDay(employeeId : Nat, date : Text) : async () {
@@ -534,35 +533,40 @@ actor {
   };
 
   public shared ({ caller }) func addWorkDaysBulk(entries : [(Nat, WorkDay)]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
     for ((employeeId, workDay) in entries.vals()) {
-      let adjustedWorkDay = adjustLeaveHoursForHourlyEmployees(employeeId, workDay);
       let employeeWorkDays = switch (natMap.get(workDays, employeeId)) {
         case (null) { textMap.empty<WorkDay>() };
         case (?days) { days };
       };
-      let updatedWorkDays = textMap.put(employeeWorkDays, adjustedWorkDay.date, adjustedWorkDay);
+      let updatedWorkDays = textMap.put(employeeWorkDays, workDay.date, workDay);
       workDays := natMap.put(workDays, employeeId, updatedWorkDays);
 
-      if (adjustedWorkDay.isLeave) {
-        await updateLeaveRecordFromWorkDay(employeeId, adjustedWorkDay.date);
+      if (workDay.isLeave) {
+        await updateLeaveRecordFromWorkDay(employeeId, workDay.date);
       };
     };
 
     await calculateAndUpdatePayroll();
   };
 
-  public query func getWorkDays(employeeId : Nat) : async [WorkDay] {
+  public query ({ caller }) func getWorkDays(employeeId : Nat) : async [WorkDay] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     switch (natMap.get(workDays, employeeId)) {
       case (null) { [] };
       case (?days) { Iter.toArray(textMap.vals(days)) };
     };
   };
 
-  public query func getWorkDay(employeeId : Nat, date : Text) : async ?WorkDay {
+  public query ({ caller }) func getWorkDay(employeeId : Nat, date : Text) : async ?WorkDay {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
     switch (natMap.get(workDays, employeeId)) {
       case (null) { null };
       case (?days) { textMap.get(days, date) };
@@ -570,7 +574,7 @@ actor {
   };
 
   public shared ({ caller }) func deleteWorkDay(employeeId : Nat, date : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -614,11 +618,9 @@ actor {
   };
 
   public shared ({ caller }) func updateWorkDay(employeeId : Nat, date : Text, updatedWorkDay : WorkDay) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
-
-    let adjustedWorkDay = adjustLeaveHoursForHourlyEmployees(employeeId, updatedWorkDay);
 
     switch (natMap.get(workDays, employeeId)) {
       case (null) { Debug.trap("Οι ημέρες εργασίας για αυτόν τον εργαζόμενο δεν βρέθηκαν") };
@@ -627,9 +629,9 @@ actor {
           case (null) { Debug.trap("Η ημέρα εργασίας δεν βρέθηκε") };
           case (?existingWorkDay) {
             let wasLeave = existingWorkDay.isLeave;
-            let isNowLeave = adjustedWorkDay.isLeave;
+            let isNowLeave = updatedWorkDay.isLeave;
 
-            let updatedWorkDays = textMap.put(days, date, adjustedWorkDay);
+            let updatedWorkDays = textMap.put(days, date, updatedWorkDay);
             workDays := natMap.put(workDays, employeeId, updatedWorkDays);
 
             if (wasLeave and not isNowLeave) {
@@ -646,29 +648,27 @@ actor {
   };
 
   public shared ({ caller }) func updateWorkDaysBulk(entries : [(Nat, WorkDay)]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
     for ((employeeId, workDay) in entries.vals()) {
-      let adjustedWorkDay = adjustLeaveHoursForHourlyEmployees(employeeId, workDay);
-
       switch (natMap.get(workDays, employeeId)) {
         case (null) {};
         case (?employeeWorkDays) {
-          switch (textMap.get(employeeWorkDays, adjustedWorkDay.date)) {
+          switch (textMap.get(employeeWorkDays, workDay.date)) {
             case (null) {};
             case (?existingWorkDay) {
               let wasLeave = existingWorkDay.isLeave;
-              let isNowLeave = adjustedWorkDay.isLeave;
+              let isNowLeave = workDay.isLeave;
 
-              let updatedWorkDays = textMap.put(employeeWorkDays, adjustedWorkDay.date, adjustedWorkDay);
+              let updatedWorkDays = textMap.put(employeeWorkDays, workDay.date, workDay);
               workDays := natMap.put(workDays, employeeId, updatedWorkDays);
 
               if (wasLeave and not isNowLeave) {
-                await removeLeaveRecordFromWorkDay(employeeId, adjustedWorkDay.date);
+                await removeLeaveRecordFromWorkDay(employeeId, workDay.date);
               } else if (not wasLeave and isNowLeave) {
-                await updateLeaveRecordFromWorkDay(employeeId, adjustedWorkDay.date);
+                await updateLeaveRecordFromWorkDay(employeeId, workDay.date);
               };
             };
           };
@@ -684,28 +684,31 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func saveDailyBulkWorkDays(date : Text, entries : [(Nat, WorkDay)]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
     for ((employeeId, workDay) in entries.vals()) {
-      let adjustedWorkDay = adjustLeaveHoursForHourlyEmployees(employeeId, workDay);
       let employeeWorkDays = switch (natMap.get(workDays, employeeId)) {
         case (null) { textMap.empty<WorkDay>() };
         case (?days) { days };
       };
-      let updatedWorkDays = textMap.put(employeeWorkDays, adjustedWorkDay.date, adjustedWorkDay);
+      let updatedWorkDays = textMap.put(employeeWorkDays, workDay.date, workDay);
       workDays := natMap.put(workDays, employeeId, updatedWorkDays);
 
-      if (adjustedWorkDay.isLeave) {
-        await updateLeaveRecordFromWorkDay(employeeId, adjustedWorkDay.date);
+      if (workDay.isLeave) {
+        await updateLeaveRecordFromWorkDay(employeeId, workDay.date);
       };
     };
 
     await calculateAndUpdatePayroll();
   };
 
-  public query func getDailyBulkWorkDays(date : Text) : async [(Nat, WorkDay)] {
+  public query ({ caller }) func getDailyBulkWorkDays(date : Text) : async [(Nat, WorkDay)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
+
     let results = Array.mapFilter<(Nat, OrderedMap.Map<Text, WorkDay>), (Nat, WorkDay)>(
       Iter.toArray(natMap.entries(workDays)),
       func((employeeId, employeeWorkDays)) {
@@ -720,10 +723,13 @@ actor {
   };
 
   // ============================================================================
-  // PAYROLL MANAGEMENT FUNCTIONS - INTERNAL
+  // PAYROLL MANAGEMENT FUNCTIONS - ADMIN ONLY
   // ============================================================================
 
-  public shared func calculateAndUpdatePayroll() : async () {
+  public shared ({ caller }) func calculateAndUpdatePayroll() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     for ((employeeId, employee) in natMap.entries(employees)) {
       let employeeWorkDays = switch (natMap.get(workDays, employeeId)) {
@@ -762,15 +768,7 @@ actor {
           };
 
           if (workDay.isLeave) {
-            let leaveHoursToAdd = switch (natMap.get(employees, employeeId)) {
-              case (null) { workDay.normalHours };
-              case (?emp) {
-                if (emp.employeeType == "hourly") { 8.0 } else {
-                  workDay.normalHours;
-                };
-              };
-            };
-            monthlyLeaveHours := textMap.put(monthlyLeaveHours, key, currentLeave + leaveHoursToAdd);
+            monthlyLeaveHours := textMap.put(monthlyLeaveHours, key, currentLeave + workDay.normalHours);
           } else {
             monthlyHours := textMap.put(monthlyHours, key, currentHours + workDay.normalHours);
             monthlyOvertime := textMap.put(monthlyOvertime, key, currentOvertime + workDay.overtimeHours);
@@ -840,7 +838,7 @@ actor {
             case (null) { textMap.empty<[PaymentRecord]>() };
             case (?p) { p };
           };
-          let paymentList = switch (textMap.get(payments, key)) {
+          let paymentList = switch (textMap.get(payments, paymentKey)) {
             case (null) { [] };
             case (?list) { list };
           };
@@ -918,10 +916,14 @@ actor {
   };
 
   // ============================================================================
-  // PAYROLL DATA FUNCTIONS - USER ACCESS
+  // PAYROLL DATA FUNCTIONS - ADMIN ONLY
   // ============================================================================
 
-  public query func getAllEmployeesPayrollData(month : Nat, year : Nat) : async [PayrollData] {
+  public query ({ caller }) func getAllEmployeesPayrollData(month : Nat, year : Nat) : async [PayrollData] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
+
     let key = Nat.toText(month) # "-" # Nat.toText(year);
     let previousKey = if (month > 1) Nat.toText(month - 1) # "-" # Nat.toText(year) else key;
     var result : [PayrollData] = [];
@@ -1105,7 +1107,11 @@ actor {
     result;
   };
 
-  public query func getEmployeePayrollData(employeeId : Nat, month : Nat, year : Nat) : async ?PayrollData {
+  public query ({ caller }) func getEmployeePayrollData(employeeId : Nat, month : Nat, year : Nat) : async ?PayrollData {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
+
     let key = Nat.toText(month) # "-" # Nat.toText(year);
     let previousKey = if (month > 1) Nat.toText(month - 1) # "-" # Nat.toText(year) else key;
 
@@ -1310,7 +1316,7 @@ actor {
   };
 
   public shared ({ caller }) func addPayment(payment : PaymentRecord) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1333,7 +1339,7 @@ actor {
   };
 
   public shared ({ caller }) func addPaymentsBulk(payments : [PaymentRecord]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1357,7 +1363,10 @@ actor {
     await calculateAndUpdatePayroll();
   };
 
-  public query func getPayments(employeeId : Nat, month : Nat, year : Nat) : async [PaymentRecord] {
+  public query ({ caller }) func getPayments(employeeId : Nat, month : Nat, year : Nat) : async [PaymentRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     let key = Nat.toText(month) # "-" # Nat.toText(year);
     switch (natMap.get(paymentRecords, employeeId)) {
@@ -1379,7 +1388,10 @@ actor {
     totalBankPayments : Float;
   };
 
-  public query func getAllEmployeesPayments(month : Nat, year : Nat) : async [EmployeePayments] {
+  public query ({ caller }) func getAllEmployeesPayments(month : Nat, year : Nat) : async [EmployeePayments] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     let key = Nat.toText(month) # "-" # Nat.toText(year);
     var result : [EmployeePayments] = [];
@@ -1420,7 +1432,7 @@ actor {
   };
 
   public shared ({ caller }) func updatePayment(employeeId : Nat, month : Nat, year : Nat, paymentDate : Text, updatedPayment : PaymentRecord) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1449,7 +1461,7 @@ actor {
   };
 
   public shared ({ caller }) func updatePaymentsBulk(payments : [PaymentRecord]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1480,7 +1492,7 @@ actor {
   };
 
   public shared ({ caller }) func deletePayment(employeeId : Nat, month : Nat, year : Nat, paymentDate : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1510,7 +1522,7 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func setMonthlyBankSalary(employeeId : Nat, month : Nat, year : Nat, amount : Float) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1544,7 +1556,7 @@ actor {
   };
 
   public shared ({ caller }) func setMonthlyBankSalariesBulk(salaries : [(Nat, Nat, Nat, Float)]) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1579,7 +1591,10 @@ actor {
     await calculateAndUpdatePayroll();
   };
 
-  public query func getMonthlyBankSalary(employeeId : Nat, month : Nat, year : Nat) : async ?Float {
+  public query ({ caller }) func getMonthlyBankSalary(employeeId : Nat, month : Nat, year : Nat) : async ?Float {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     let key = Nat.toText(month) # "-" # Nat.toText(year);
     switch (natMap.get(monthlyBankSalaries, employeeId)) {
@@ -1599,7 +1614,10 @@ actor {
     };
   };
 
-  public query func getAllMonthlyBankSalaries() : async [MonthlyBankSalary] {
+  public query ({ caller }) func getAllMonthlyBankSalaries() : async [MonthlyBankSalary] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     var result : [MonthlyBankSalary] = [];
     for ((_, salaries) in natMap.entries(monthlyBankSalaries)) {
@@ -1613,7 +1631,7 @@ actor {
   };
 
   public shared ({ caller }) func updateMonthlyBankSalary(id : Nat, employeeId : Nat, month : Nat, year : Nat, amount : Float) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1669,7 +1687,7 @@ actor {
   };
 
   public shared ({ caller }) func deleteMonthlyBankSalary(id : Nat, employeeId : Nat, month : Nat, year : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1712,7 +1730,7 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func toggleLeaveDay(employeeId : Nat, date : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1765,7 +1783,10 @@ actor {
     await calculateAndUpdatePayroll();
   };
 
-  public query func getLeaveRecord(employeeId : Nat) : async ?LeaveRecord {
+  public query ({ caller }) func getLeaveRecord(employeeId : Nat) : async ?LeaveRecord {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     switch (natMap.get(leaveRecords, employeeId), natMap.get(employees, employeeId)) {
       case (leaveRecord, ?employee) {
@@ -1793,7 +1814,10 @@ actor {
     };
   };
 
-  public query func getAllLeaveRecords() : async [LeaveRecord] {
+  public query ({ caller }) func getAllLeaveRecords() : async [LeaveRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     var result : [LeaveRecord] = [];
     for ((employeeId, leave) in natMap.entries(leaveRecords)) {
@@ -1820,7 +1844,7 @@ actor {
   };
 
   public shared ({ caller }) func deleteLeaveRecord(employeeId : Nat, date : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1843,7 +1867,7 @@ actor {
   };
 
   public shared ({ caller }) func addBulkLeaveDay(date : Text) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1908,7 +1932,10 @@ actor {
     remainingLeaveDays : Nat;
   };
 
-  public query func getAllEmployeeLeaveRecords() : async [EmployeeLeaveRecord] {
+  public query ({ caller }) func getAllEmployeeLeaveRecords() : async [EmployeeLeaveRecord] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can perform this action");
+    };
 
     var result : [EmployeeLeaveRecord] = [];
     for ((employeeId, employee) in natMap.entries(employees)) {
@@ -1939,7 +1966,7 @@ actor {
   };
 
   public shared ({ caller }) func resetLeaveRecord(employeeId : Nat, newAnnualLeaveDays : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -1960,7 +1987,7 @@ actor {
   // ============================================================================
 
   public shared ({ caller }) func resetAllLeaveRecords(newAnnualLeaveDays : Nat) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Debug.trap("Unauthorized: Only admins can perform this action");
     };
 

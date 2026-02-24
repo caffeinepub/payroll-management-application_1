@@ -1,48 +1,54 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T09:50:11.735Z",
+  "generatedAt": "2026-02-24T07:14:47.243Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 0,
     "items": [
       {
+        "id": "REQ-1",
+        "summary": "When a leave day is added to an employee in the employee calendar (via individual entry or bulk entry), calculate it as 8 hours of regular work and update the employee's payroll and leave balance accordingly",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
         "id": "REQ-2",
-        "summary": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps that produce the messages \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially the add-employee flow), while keeping admin-only restrictions intact for admin-only operations (e.g., updating/deleting employees, work day edits, Stripe configuration).",
+        "summary": "For hourly employees, calculate leave day payment as 8 regular work hours multiplied by their hourly rate",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/errors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/EmployeesPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/errors.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/EmployeesPage.tsx"
-        ]
+        "summary": "For monthly employees, deduct 1 day from their total leave balance when a leave day is added, without affecting salary calculation",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/EmployeesPage.tsx",
-    "frontend/src/utils/errors.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/BulkLeaveDayDialog.tsx",
+    "frontend/src/components/DailyBulkEntryTable.tsx",
+    "frontend/src/components/LeaveDayDialog.tsx",
+    "frontend/src/components/WorkDayDialog.tsx",
+    "frontend/src/config.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/pages/CalendarPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

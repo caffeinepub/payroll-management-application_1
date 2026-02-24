@@ -68,11 +68,10 @@ export default function DailyBulkEntryTable({ employees }: DailyBulkEntryTablePr
       
       if (savedWorkDay) {
         // Pre-fill with saved data
-        // For leave entries, never show overtime (even if legacy data exists)
         newEntries.set(employeeIdStr, {
           employeeId: employee.id,
           normalHours: savedWorkDay.normalHours > 0 ? savedWorkDay.normalHours.toString().replace('.', ',') : '',
-          overtimeHours: savedWorkDay.isLeave ? '' : (savedWorkDay.overtimeHours > 0 ? savedWorkDay.overtimeHours.toString().replace('.', ',') : ''),
+          overtimeHours: savedWorkDay.overtimeHours > 0 ? savedWorkDay.overtimeHours.toString().replace('.', ',') : '',
           isLeave: savedWorkDay.isLeave,
         });
       } else {
@@ -107,12 +106,7 @@ export default function DailyBulkEntryTable({ employees }: DailyBulkEntryTablePr
   const handleLeaveChange = (employeeId: bigint, checked: boolean) => {
     const key = employeeId.toString();
     const current = entries.get(key) || { employeeId, normalHours: '', overtimeHours: '', isLeave: false };
-    // When leave is checked, clear overtime hours
-    const updated = { 
-      ...current, 
-      isLeave: checked,
-      overtimeHours: checked ? '' : current.overtimeHours
-    };
+    const updated = { ...current, isLeave: checked };
     setEntries(new Map(entries.set(key, updated)));
   };
 
@@ -158,8 +152,7 @@ export default function DailyBulkEntryTable({ employees }: DailyBulkEntryTablePr
         const overtimeHoursStr = entry.overtimeHours.replace(',', '.');
         
         let normalHours = parseFloat(normalHoursStr || '0');
-        // For leave entries, always set overtime to 0
-        const overtimeHours = entry.isLeave ? 0.0 : parseFloat(overtimeHoursStr || '0');
+        const overtimeHours = parseFloat(overtimeHoursStr || '0');
 
         // If leave is checked, automatically set normal hours to 8
         if (entry.isLeave) {
@@ -340,13 +333,10 @@ export default function DailyBulkEntryTable({ employees }: DailyBulkEntryTablePr
                         placeholder="π.χ. 2.3 ή 2,3"
                         value={entry.overtimeHours}
                         onChange={(e) => handleEntryChange(employee.id, 'overtimeHours', e.target.value)}
-                        disabled={isSaving || isLoading || entry.isLeave}
-                        className={cn("w-full", entry.isLeave && "bg-muted")}
+                        disabled={isSaving || isLoading}
+                        className="w-full"
                         autoComplete="off"
                       />
-                      {entry.isLeave && (
-                        <p className="text-xs text-muted-foreground mt-1">Χωρίς υπερωρίες</p>
-                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center">
@@ -368,9 +358,9 @@ export default function DailyBulkEntryTable({ employees }: DailyBulkEntryTablePr
           <p className="font-medium">Σημείωση για την Άδεια:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>Όταν επιλέγετε "Άδεια", οι κανονικές ώρες ορίζονται αυτόματα σε 8</li>
-            <li>Οι υπερωρίες δεν επιτρέπονται σε ημέρες άδειας και ορίζονται αυτόματα σε 0</li>
             <li>Η άδεια αφαιρείται αυτόματα από το υπόλοιπο του εργαζομένου</li>
-            <li>Η μισθοδοσία υπολογίζεται αυτόματα με τις 8 ώρες άδειας επί την ωριαία αμοιβή</li>
+            <li>Για ωριαίους: Η μισθοδοσία υπολογίζεται με 8 ώρες × ωριαία αμοιβή</li>
+            <li>Για μηνιαίους: Αφαιρείται 1 ημέρα από το υπόλοιπο άδειας</li>
           </ul>
         </div>
 

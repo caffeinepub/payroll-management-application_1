@@ -1,57 +1,38 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Adjust access control so the app can be used by anyone with the link (no admin/user restriction errors), while keeping all other UI and functionality unchanged.",
-  "architectural_notes": [
-    "Adjust authorization/role permissions for the 'add employee' action to allow regular users (not only admins).",
-    "User requests link-based open access (remove admin/user role restrictions) while keeping all other UI/functionality unchanged; reconcile with existing authenticated-user-only add-employee requirement."
-  ],
-  "known_issues": [
-    "Adding an employee fails for non-admin users with: \"Unauthorized: Only admins can perform this action\".",
-    "Users encounter authorization errors such as 'Only users can perform this action' / 'Only admin' that block adding employees and using the app."
-  ],
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
   "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-ensure-the-frontend-does-not-display-the-authorization-error-strings-e-g-only-users-can-perform-this-action-during-normal-usage-flows-especially-employee-creation-once-backend-authorization-is-corrected-without-changing-the-ui-layout-design-or-any-existing-features",
-      "title": "Ensure the frontend does not display the authorization error strings (e.g., \"Only users can perform this action\") during normal usage flows (especially employee creation) once backend authorization is corrected, without changing the UI layout/design or any existing features.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    }
-  ],
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix add-employee flow so non-admin users can add employees without 'Unauthorized: Only admins can perform this action' error (do not change other app functionality).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Update the backend authorization for the employee creation endpoint so that any authenticated user (user role/permission) can successfully add an employee without receiving the error \"Unauthorized: Only admins can perform this action\". This change must be limited strictly to the add-employee operation and must not alter authorization rules or behavior for any other operations (e.g., updating/deleting employees, adding work days, leave edits, payroll changes, Stripe configuration).",
+      "summary": "When a leave day is added to an employee in the employee calendar (via individual entry or bulk entry), calculate it as 8 hours of regular work and update the employee's payroll and leave balance accordingly",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-3",
-      "summary": "Allow anyone with the link to use the app without role-based access restrictions; remove/avoid 'Only admin' and 'Only users can perform this action' errors so employee addition and core functions work, without changing any other UI or functionality.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Update backend authorization so that opening the app and adding an employee works for any caller (including anonymous users), eliminating the runtime traps that produce the messages \"Unauthorized: Only users can perform this action\" and \"Unauthorized: Only admins can perform this action\" during normal use (especially the add-employee flow), while keeping admin-only restrictions intact for admin-only operations (e.g., updating/deleting employees, work day edits, Stripe configuration).",
+      "id": "AR-2",
+      "summary": "For hourly employees, calculate leave day payment as 8 regular work hours multiplied by their hourly rate",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "For monthly employees, deduct 1 day from their total leave balance when a leave day is added, without affecting salary calculation",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
     }
   ],
-  "projectName": "Payroll Manager",
+  "projectName": "Fix leave day calculation to count as 8 regular work hours",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
