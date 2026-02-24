@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "Payroll app (v242) - fix 'Only admins can perform this action' errors by removing all admin permission checks so any user can use all app features (add employees, salaries, hours, payments, leaves) without restrictions",
+  "architectural_notes": [
+    "App is a payroll management system deployed on Internet Computer (ICP) - backend in Motoko, frontend in React",
+    "Admin authorization checks in backend must be removed so all functions (employees, hours, payments, leaves) are open to any caller"
+  ],
+  "known_issues": [
+    "'Only admins can perform this action' error blocks all app functionality in v242 - admin checks need to be removed",
+    "Data loss occurred between versions - previous employee/payment/hours data not accessible in v242"
+  ],
+  "isFixRequest": true,
+  "existing_features": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "When a leave day is added to an employee in the employee calendar (via individual entry or bulk entry), calculate it as 8 hours of regular work and update the employee's payroll and leave balance accordingly",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "For hourly employees, calculate leave day payment as 8 regular work hours multiplied by their hourly rate",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "For monthly employees, deduct 1 day from their total leave balance when a leave day is added, without affecting salary calculation",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Remove all admin permission checks ('Only admins can perform this action') so any user can use all app features without restrictions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Remove all admin-only access control checks in the backend (main.mo) so that any authenticated user can add employees, update monthly salaries, record work hours in the calendar, add payments, manage leave days, and use all other app features without receiving 'Only admins can perform this action' errors.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Fix leave day calculation to count as 8 regular work hours",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

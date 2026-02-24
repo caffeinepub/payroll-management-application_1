@@ -1,0 +1,6 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Remove admin permission checks to allow all users full app access",
+  "requirements": []
+}

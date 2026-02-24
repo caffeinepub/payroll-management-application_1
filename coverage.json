@@ -1,0 +1,60 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-24T10:46:27.537Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 1,
+    "implemented": 0,
+    "items": [
+      {
+        "id": "REQ-4",
+        "summary": "Remove all admin-only access control checks in the backend (main.mo) so that any authenticated user can add employees, update monthly salaries, record work hours in the calendar, add payments, manage leave days, and use all other app features without receiving 'Only admins can perform this action' errors.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/BulkLeaveDayDialog.tsx",
+    "frontend/src/components/BulkMonthlyBankSalaryDialog.tsx",
+    "frontend/src/components/BulkPaymentEntryTable.tsx",
+    "frontend/src/components/DailyBulkEntryTable.tsx",
+    "frontend/src/components/EmployeeDialog.tsx",
+    "frontend/src/components/EmployeeFolderView.tsx",
+    "frontend/src/components/LeaveDayDialog.tsx",
+    "frontend/src/components/LeaveEditDialog.tsx",
+    "frontend/src/components/MonthlyBankSalariesView.tsx",
+    "frontend/src/components/MonthlyBankSalaryDialog.tsx",
+    "frontend/src/components/MonthlyBankSalaryEditDialog.tsx",
+    "frontend/src/components/MonthlyBankSalaryManager.tsx",
+    "frontend/src/components/PaymentEditDialog.tsx",
+    "frontend/src/components/WorkDayDialog.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CalendarPage.tsx",
+    "frontend/src/pages/EmployeesPage.tsx",
+    "frontend/src/pages/LeavePage.tsx",
+    "frontend/src/pages/MonthlyBankSalariesPage.tsx",
+    "frontend/src/pages/PaymentsPage.tsx",
+    "frontend/src/pages/PayrollPage.tsx",
+    "frontend/src/types.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

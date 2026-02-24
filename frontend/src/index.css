@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.625rem;
+        --background: 0.99 0 0;
+        --foreground: 0.15 0 0;
+        --card: 1 0 0;
+        --card-foreground: 0.15 0 0;
+        --popover: 1 0 0;
+        --popover-foreground: 0.15 0 0;
+        --primary: 0.55 0.20 250;
+        --primary-foreground: 0.99 0 0;
+        --secondary: 0.96 0.01 250;
+        --secondary-foreground: 0.20 0 0;
+        --muted: 0.96 0.01 250;
+        --muted-foreground: 0.50 0.01 250;
+        --accent: 0.94 0.02 250;
+        --accent-foreground: 0.20 0 0;
+        --destructive: 0.58 0.24 25;
+        --destructive-foreground: 0.99 0 0;
+        --border: 0.90 0.01 250;
+        --input: 0.90 0.01 250;
+        --ring: 0.55 0.20 250;
+        --chart-1: 0.65 0.22 145;
+        --chart-2: 0.60 0.20 250;
+        --chart-3: 0.70 0.18 30;
+        --chart-4: 0.55 0.22 280;
+        --chart-5: 0.62 0.20 180;
+        --sidebar: 0.98 0 0;
+        --sidebar-foreground: 0.15 0 0;
+        --sidebar-primary: 0.55 0.20 250;
+        --sidebar-primary-foreground: 0.99 0 0;
+        --sidebar-accent: 0.96 0.01 250;
+        --sidebar-accent-foreground: 0.20 0 0;
+        --sidebar-border: 0.90 0.01 250;
+        --sidebar-ring: 0.55 0.20 250;
+    }
+
+    .dark {
+        --background: 0.12 0.01 250;
+        --foreground: 0.98 0 0;
+        --card: 0.16 0.01 250;
+        --card-foreground: 0.98 0 0;
+        --popover: 0.14 0.01 250;
+        --popover-foreground: 0.98 0 0;
+        --primary: 0.65 0.22 250;
+        --primary-foreground: 0.12 0 0;
+        --secondary: 0.22 0.02 250;
+        --secondary-foreground: 0.98 0 0;
+        --muted: 0.22 0.02 250;
+        --muted-foreground: 0.65 0.02 250;
+        --accent: 0.26 0.02 250;
+        --accent-foreground: 0.98 0 0;
+        --destructive: 0.62 0.24 25;
+        --destructive-foreground: 0.98 0 0;
+        --border: 0.26 0.02 250;
+        --input: 0.26 0.02 250;
+        --ring: 0.65 0.22 250;
+        --chart-1: 0.70 0.22 145;
+        --chart-2: 0.65 0.20 250;
+        --chart-3: 0.75 0.18 30;
+        --chart-4: 0.60 0.22 280;
+        --chart-5: 0.68 0.20 180;
+        --sidebar: 0.16 0.01 250;
+        --sidebar-foreground: 0.98 0 0;
+        --sidebar-primary: 0.65 0.22 250;
+        --sidebar-primary-foreground: 0.12 0 0;
+        --sidebar-accent: 0.22 0.02 250;
+        --sidebar-accent-foreground: 0.98 0 0;
+        --sidebar-border: 0.26 0.02 250;
+        --sidebar-ring: 0.65 0.22 250;
+    }
+
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Enhanced Calendar Styles for Better Visibility */
+@layer components {
+    .calendar-enhanced {
+        @apply p-4;
+    }
+
+    .calendar-enhanced .rdp-months {
+        @apply space-y-4;
+    }
+
+    .calendar-enhanced .rdp-month {
+        @apply space-y-4;
+    }
+
+    .calendar-enhanced .rdp-caption {
+        @apply flex justify-center pt-1 relative items-center mb-4;
+    }
+
+    .calendar-enhanced .rdp-caption_label {
+        @apply text-lg font-semibold;
+    }
+
+    .calendar-enhanced .rdp-nav {
+        @apply space-x-1 flex items-center;
+    }
+
+    .calendar-enhanced .rdp-button_previous,
+    .calendar-enhanced .rdp-button_next {
+        @apply h-9 w-9 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    .calendar-enhanced .rdp-table {
+        @apply w-full border-collapse space-y-1;
+    }
+
+    .calendar-enhanced .rdp-head_cell {
+        @apply text-muted-foreground rounded-md w-12 font-semibold text-base;
+    }
+
+    .calendar-enhanced .rdp-tbody {
+        @apply space-y-1;
+    }
+
+    .calendar-enhanced .rdp-row {
+        @apply flex w-full mt-2;
+    }
+
+    .calendar-enhanced .rdp-cell {
+        @apply relative p-0 text-center text-base focus-within:relative focus-within:z-20;
+    }
+
+    .calendar-enhanced .rdp-day {
+        @apply h-12 w-12 p-0 font-medium text-base aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors;
+    }
+
+    .calendar-enhanced .rdp-day_button {
+        @apply h-12 w-12 p-0 font-medium text-base inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    .calendar-enhanced .rdp-day_selected {
+        @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground;
+    }
+
+    .calendar-enhanced .rdp-day_today {
+        @apply bg-accent text-accent-foreground font-bold;
+    }
+
+    .calendar-enhanced .rdp-day_outside {
+        @apply text-muted-foreground opacity-50;
+    }
+
+    .calendar-enhanced .rdp-day_disabled {
+        @apply text-muted-foreground opacity-50;
+    }
+
+    .calendar-enhanced .rdp-day_hidden {
+        @apply invisible;
+    }
+
+    /* Larger calendar variant for daily entry table */
+    .calendar-enhanced-large {
+        @apply p-6;
+    }
+
+    .calendar-enhanced-large .rdp-months {
+        @apply space-y-6;
+    }
+
+    .calendar-enhanced-large .rdp-month {
+        @apply space-y-6;
+    }
+
+    .calendar-enhanced-large .rdp-caption {
+        @apply flex justify-center pt-2 relative items-center mb-6;
+    }
+
+    .calendar-enhanced-large .rdp-caption_label {
+        @apply text-xl font-bold;
+    }
+
+    .calendar-enhanced-large .rdp-nav {
+        @apply space-x-2 flex items-center;
+    }
+
+    .calendar-enhanced-large .rdp-button_previous,
+    .calendar-enhanced-large .rdp-button_next {
+        @apply h-11 w-11 bg-transparent p-0 opacity-60 hover:opacity-100 inline-flex items-center justify-center rounded-md text-base font-medium transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    .calendar-enhanced-large .rdp-table {
+        @apply w-full border-collapse space-y-2;
+    }
+
+    .calendar-enhanced-large .rdp-head_cell {
+        @apply text-muted-foreground rounded-md w-16 font-bold text-lg py-2;
+    }
+
+    .calendar-enhanced-large .rdp-tbody {
+        @apply space-y-2;
+    }
+
+    .calendar-enhanced-large .rdp-row {
+        @apply flex w-full mt-3;
+    }
+
+    .calendar-enhanced-large .rdp-cell {
+        @apply relative p-0 text-center text-lg focus-within:relative focus-within:z-20;
+    }
+
+    .calendar-enhanced-large .rdp-day {
+        @apply h-16 w-16 p-0 font-semibold text-lg aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors;
+    }
+
+    .calendar-enhanced-large .rdp-day_button {
+        @apply h-16 w-16 p-0 font-semibold text-lg inline-flex items-center justify-center rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    .calendar-enhanced-large .rdp-day_selected {
+        @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground ring-2 ring-primary ring-offset-2;
+    }
+
+    .calendar-enhanced-large .rdp-day_today {
+        @apply bg-accent text-accent-foreground font-bold ring-2 ring-accent;
+    }
+
+    .calendar-enhanced-large .rdp-day_outside {
+        @apply text-muted-foreground opacity-40;
+    }
+
+    .calendar-enhanced-large .rdp-day_disabled {
+        @apply text-muted-foreground opacity-30;
+    }
+
+    .calendar-enhanced-large .rdp-day_hidden {
+        @apply invisible;
+    }
+}

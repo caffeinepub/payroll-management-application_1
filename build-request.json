@@ -1,0 +1,46 @@
+{
+  "kind": "build_request",
+  "title": "Remove admin permission checks to allow all users full app access",
+  "projectName": "Payroll Manager",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-4",
+      "text": "Remove all admin-only access control checks in the backend (main.mo) so that any authenticated user can add employees, update monthly salaries, record work hours in the calendar, add payments, manage leave days, and use all other app features without receiving 'Only admins can perform this action' errors.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "ΔΙΟΡΘΩΣΕ ΤΑ ΣΦΑΛΜΑΤΑ \"ONLY ADMINS CAN PERFORM THIS ACTION\" ΩΣΤΕ ΝΑ ΜΠΟΡΩ ΝΑ ΠΡΟΣΘΕΣΩ ΕΡΓΑΖΟΜΕΝΟΥΣ ΣΤΗΝ ΕΦΑΡΜΟΓΗ, ΜΗΝΙΑΟΥΣ ΜΙΣΘΟΥΣ, ΩΡΕΣ ΣΤΟ ΗΜΕΡΟΛΟΓΙΟ ΕΡΓΑΖΟΜΕΝΩΝ, ΠΛΗΡΩΜΕΣ, ΑΔΕΙΕΣ ΚΑΙ ΓΕΝΙΚΑ ΝΑ ΜΠΟΡΩ ΝΑ ΧΡΗΣΙΜΟΠΟΙΗΣΩ ΟΛΕΣ ΤΙς ΛΕΙΤΟΥΡΓΙΕΣ ΤΗΣ ΕΦΑΡΜΟΓΗΣ"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Any authenticated user (logged in via Internet Identity) can add a new employee without receiving an error.",
+        "Any authenticated user can record or edit work hours in the employee calendar without receiving an error.",
+        "Any authenticated user can add or edit monthly bank salaries without receiving an error.",
+        "Any authenticated user can add or edit payments (cash and bank) without receiving an error.",
+        "Any authenticated user can add or edit leave days without receiving an error.",
+        "No 'Only admins can perform this action' error is thrown for any operation in the application.",
+        "No other app functionality, UI, data models, or logic is changed."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not change any frontend UI, layout, components, or pages.",
+    "Do not change any business logic, data models, or calculation logic in the backend.",
+    "Only remove or bypass the admin role/permission guard checks — no other backend changes."
+  ],
+  "nonGoals": [
+    "Adding new features or pages.",
+    "Changing payroll calculation logic.",
+    "Modifying the leave day calculation behavior.",
+    "Altering the authentication flow or Internet Identity integration.",
+    "Redesigning any UI component."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}
