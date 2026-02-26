@@ -44,6 +44,18 @@ export interface StripeConfiguration {
     allowedCountries: Array<string>;
     secretKey: string;
 }
+export interface Employee {
+    id: bigint;
+    fixedMonthlySalary?: number;
+    employeeType: string;
+    hourlyRate: number;
+    fullName: string;
+    bankIban?: string;
+    email?: string;
+    totalAnnualLeaveDays: bigint;
+    overtimeRate: number;
+    phone?: string;
+}
 export interface UserProfile {
     name: string;
 }
@@ -59,9 +71,12 @@ export enum UserRole {
 export interface backendInterface {
     addEmployee(fullName: string, hourlyRate: string, overtimeRate: string, fixedMonthlySalary: string | null, totalAnnualLeaveDays: bigint | null, email: string | null, phone: string | null, bankIban: string | null, employeeType: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    countEmployees(): Promise<bigint>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
+    getAllEmployees(): Promise<Array<Employee>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getEmployee(id: bigint): Promise<Employee | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     initializeAccessControl(): Promise<void>;

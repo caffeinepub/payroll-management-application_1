@@ -1,10 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Remove all admin-only permission checks in the backend so that any authenticated user can use all features of the Payroll Manager app.
+**Goal:** Restore data visibility in the HR Payroll Manager after a canister upgrade by fixing stable state declarations in the backend and ensuring the frontend correctly fetches and displays all previously stored data.
 
 **Planned changes:**
-- Remove or bypass all admin role/permission guard checks in `main.mo` that throw "Only admins can perform this action" errors
-- Ensure all operations (adding employees, recording work hours, managing monthly salaries, adding payments, managing leave days) are accessible to any authenticated user
+- Audit all state collections in `backend/main.mo` (employees, work days, payments, leave records, monthly bank salaries, payroll records) and ensure every collection is declared as a `stable` variable so data survives canister upgrades.
+- Create `backend/migration.mo` with a pre/post-upgrade pattern that preserves and migrates existing stable state from previous deployments without data loss.
+- Fix `useQueries.ts` frontend data-fetching hooks to correctly fetch and display data from the upgraded backend across all pages (Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, Leave), including proper React Query cache invalidation.
 
-**User-visible outcome:** Any logged-in user can add employees, record work hours in the calendar, manage monthly salaries, add payments, and manage leave days without encountering permission errors.
+**User-visible outcome:** After deploying the updated canister, all previously entered employees, work hours, payments, leave records, and salary data reappear correctly on every page without requiring a manual refresh, and payroll calculations produce the same correct results as before.

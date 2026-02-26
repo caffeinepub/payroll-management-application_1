@@ -1,167 +1,142 @@
 import { useState } from 'react';
-import { useSetMonthlyBankSalary } from '../hooks/useQueries';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useGetEmployees, useSetMonthlyBankSalary } from '../hooks/useQueries';
 import { toast } from 'sonner';
+
+const MONTHS = [
+  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
+  'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
+  'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
+];
 
 interface MonthlyBankSalaryDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  employeeId: number;
-  employeeName: string;
+  onClose: () => void;
 }
 
-export default function MonthlyBankSalaryDialog({
-  open,
-  onOpenChange,
-  employeeId,
-  employeeName,
-}: MonthlyBankSalaryDialogProps) {
+export default function MonthlyBankSalaryDialog({ open, onClose }: MonthlyBankSalaryDialogProps) {
+  const { data: employees = [] } = useGetEmployees();
   const setMonthlyBankSalary = useSetMonthlyBankSalary();
-  const currentDate = new Date();
 
-  const [month, setMonth] = useState<string>((currentDate.getMonth() + 1).toString());
-  const [year, setYear] = useState<string>(currentDate.getFullYear().toString());
-  const [amount, setAmount] = useState<string>('');
+  const now = new Date();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number>(0);
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [amount, setAmount] = useState('');
 
-  const monthNames = [
-    'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
-    'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
-    'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
-  ];
+  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
 
-  const parseDecimal = (value: string): number | null => {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-    const normalized = trimmed.replace(',', '.');
-    const parsed = parseFloat(normalized);
-    if (isNaN(parsed) || !isFinite(parsed)) return null;
-    return parsed;
-  };
+  const handleSubmit = async () => {
+    if (!selectedEmployeeId || !amount) return;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const parsedAmount = parseDecimal(amount);
-    if (parsedAmount === null || parsedAmount <= 0) {
-      toast.error('Το ποσό πρέπει να είναι έγκυρος θετικός αριθμός');
-      return;
+    try {
+      await setMonthlyBankSalary.mutateAsync({
+        employeeId: selectedEmployeeId,
+        month,
+        year,
+        amount: parseFloat(amount.replace(',', '.')),
+      });
+      toast.success('Ο μισθός αποθηκεύτηκε');
+      onClose();
+    } catch {
+      toast.error('Σφάλμα κατά την αποθήκευση');
     }
-
-    const monthNum = parseInt(month, 10);
-    const yearNum = parseInt(year, 10);
-
-    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-      toast.error('Μη έγκυρος μήνας');
-      return;
-    }
-
-    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
-      toast.error('Μη έγκυρο έτος');
-      return;
-    }
-
-    setMonthlyBankSalary.mutate(
-      {
-        employeeId,
-        month: monthNum,
-        year: yearNum,
-        amount: parsedAmount,
-      },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          setAmount('');
-        },
-      }
-    );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Προσθήκη Μηνιαίου Μισθού Τράπεζας</DialogTitle>
-          <DialogDescription>
-            Προσθέστε μηνιαίο μισθό τράπεζας για τον {employeeName}. Μπορείτε να προσθέσετε πολλαπλές καταχωρήσεις για τον ίδιο μήνα.
-          </DialogDescription>
+          <DialogTitle>Καταχώρηση Τραπεζικού Μισθού</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="month">Μήνας</Label>
-              <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger id="month">
-                  <SelectValue placeholder="Επιλέξτε μήνα" />
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Εργαζόμενος</Label>
+            <Select
+              value={String(selectedEmployeeId)}
+              onValueChange={(v) => setSelectedEmployeeId(Number(v))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Επιλέξτε εργαζόμενο" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((e) => (
+                  <SelectItem key={Number(e.id)} value={String(Number(e.id))}>
+                    {e.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Μήνας</Label>
+              <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
+                <SelectTrigger>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {monthNames.map((name, index) => (
-                    <SelectItem key={index + 1} value={(index + 1).toString()}>
-                      {name}
+                  {MONTHS.map((m, i) => (
+                    <SelectItem key={i + 1} value={String(i + 1)}>
+                      {m}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="year">Έτος</Label>
-              <Input
-                id="year"
-                type="number"
-                min="2000"
-                max="2100"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                placeholder="π.χ. 2024"
-                disabled={setMonthlyBankSalary.isPending}
-                required
-                autoComplete="off"
-              />
+            <div className="space-y-1.5">
+              <Label>Έτος</Label>
+              <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="amount">Ποσό (€)</Label>
             <Input
               id="amount"
-              type="text"
-              inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="π.χ. 985.86 ή 985,86"
-              disabled={setMonthlyBankSalary.isPending}
-              required
-              autoComplete="off"
+              placeholder="0,00"
             />
-            <p className="text-xs text-muted-foreground">
-              Σημείωση: Μπορείτε να προσθέσετε πολλαπλές καταχωρήσεις για τον ίδιο μήνα
-            </p>
           </div>
+        </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={setMonthlyBankSalary.isPending}
-            >
-              Ακύρωση
-            </Button>
-            <Button type="submit" disabled={setMonthlyBankSalary.isPending}>
-              {setMonthlyBankSalary.isPending ? 'Αποθήκευση...' : 'Προσθήκη'}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Ακύρωση
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={setMonthlyBankSalary.isPending || !selectedEmployeeId || !amount}
+          >
+            {setMonthlyBankSalary.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Αποθήκευση
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

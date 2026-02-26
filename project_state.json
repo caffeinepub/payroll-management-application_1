@@ -1,21 +1,29 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Payroll app (v242) - fix 'Only admins can perform this action' errors by removing all admin permission checks so any user can use all app features (add employees, salaries, hours, payments, leaves) without restrictions",
+  "projectStateVersion": 3,
+  "summary": "HR/payroll management app with employees, calendar hours, payments, leaves, and payroll calculations. User reports data loss between versions — previously added employees, payments, calendar hours, and leaves are not showing in the new version.",
   "architectural_notes": [
-    "App is a payroll management system deployed on Internet Computer (ICP) - backend in Motoko, frontend in React",
-    "Admin authorization checks in backend must be removed so all functions (employees, hours, payments, leaves) are open to any caller"
+    "App manages employees, payments, calendar hours, leaves, and payroll calculations",
+    "Data persistence must be maintained across versions — data added in previous builds must carry over"
   ],
   "known_issues": [
-    "'Only admins can perform this action' error blocks all app functionality in v242 - admin checks need to be removed",
-    "Data loss occurred between versions - previous employee/payment/hours data not accessible in v242"
+    "Data loss between versions: employees, payments, calendar hours, and leaves added in v227 are not visible in the latest version"
   ],
   "isFixRequest": true,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-verify-and-fix-the-frontend-data-fetching-hooks-usequeries-ts-so-that-all-pages-employees-calendar-payments-payroll-monthly-bank-salaries-and-leave-correctly-fetch-and-display-data-returned-by-the-upgraded-backend-with-no-stale-cache-or-identity-gating-issues-preventing-data-from-rendering",
+      "title": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "When a leave day is added to an employee in the employee calendar (via individual entry or bulk entry), calculate it as 8 hours of regular work and update the employee's payroll and leave balance accordingly",
+      "summary": "Implement a Motoko migration module (backend/migration.mo) that preserves and migrates existing stable state (employees, work days, payments, leave records, monthly bank salaries, and payroll records) from the previous actor version so that all data entered in earlier deployments (e.g., v227) remains accessible after upgrade.",
       "reqIds": [
         "REQ-1"
       ],
@@ -23,37 +31,15 @@
     },
     {
       "id": "AR-2",
-      "summary": "For hourly employees, calculate leave day payment as 8 regular work hours multiplied by their hourly rate",
+      "summary": "Audit every state collection in backend/main.mo (employees, work days, payments, leave days, monthly bank salaries, payroll records) and ensure all are declared as `stable` variables backed by OrderedMap or equivalent stable structures, so no data is lost on canister upgrade.",
       "reqIds": [
         "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "For monthly employees, deduct 1 day from their total leave balance when a leave day is added, without affecting salary calculation",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Remove all admin permission checks ('Only admins can perform this action') so any user can use all app features without restrictions",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Remove all admin-only access control checks in the backend (main.mo) so that any authenticated user can add employees, update monthly salaries, record work hours in the calendar, add payments, manage leave days, and use all other app features without receiving 'Only admins can perform this action' errors.",
-      "reqIds": [
-        "REQ-4"
       ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Fix leave day calculation to count as 8 regular work hours",
+  "projectName": "HR Payroll Manager",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,153 +1,125 @@
-import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Edit, Mail, Phone, CreditCard, Calendar, Clock, TrendingUp } from 'lucide-react';
-import { useGetChangeHistory } from '../hooks/useQueries';
-import type { Employee } from '../types';
+import { Pencil, Mail, Phone, CreditCard, Calendar, DollarSign } from 'lucide-react';
+import { Employee } from '../backend';
 
 interface EmployeeFolderViewProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employee: Employee | null;
-  onEdit?: () => void;
+  employee: Employee;
+  onEdit: (employee: Employee) => void;
 }
 
-export default function EmployeeFolderView({
-  open,
-  onOpenChange,
-  employee,
-  onEdit,
-}: EmployeeFolderViewProps) {
-  const { data: changeHistory = [] } = useGetChangeHistory(employee?.id ?? null);
-
-  if (!employee) return null;
-
+export default function EmployeeFolderView({ open, onOpenChange, employee, onEdit }: EmployeeFolderViewProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">{employee.fullName}</DialogTitle>
-            {onEdit && (
-              <Button variant="outline" size="sm" onClick={onEdit} className="mr-6">
-                <Edit className="h-4 w-4 mr-1" />
-                Επεξεργασία
-              </Button>
-            )}
-          </div>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Φάκελος Εργαζομένου</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(employee)}
+              className="gap-1"
+            >
+              <Pencil className="w-3 h-3" />
+              Επεξεργασία
+            </Button>
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6 py-2">
-            {/* Type Badge */}
-            <div className="flex items-center gap-2">
-              <Badge variant={employee.employeeType === 'monthly' ? 'default' : 'secondary'}>
-                {employee.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωρομίσθιος'}
-              </Badge>
-            </div>
+        <div className="space-y-4">
+          {/* Basic Info */}
+          <div>
+            <h3 className="text-xl font-bold text-foreground">{employee.fullName}</h3>
+            <Badge
+              variant={employee.employeeType === 'monthly' ? 'default' : 'secondary'}
+              className="mt-1"
+            >
+              {employee.employeeType === 'monthly' ? 'Μηνιαίος Μισθός' : 'Ωρομίσθιος'}
+            </Badge>
+          </div>
 
-            {/* Salary Info */}
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
-                Αμοιβές
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {employee.employeeType === 'monthly' && employee.fixedMonthlySalary != null && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Μηνιαίος Μισθός</p>
-                      <p className="font-semibold">€{employee.fixedMonthlySalary.toFixed(2)}</p>
-                    </div>
-                  </div>
-                )}
-                {employee.employeeType === 'hourly' && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Ωριαία Αμοιβή</p>
-                      <p className="font-semibold">€{employee.hourlyRate.toFixed(2)}/ώρα</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Υπερωρία</p>
-                    <p className="font-semibold">€{employee.overtimeRate.toFixed(2)}/ώρα</p>
-                  </div>
+          <Separator />
+
+          {/* Salary Info */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Αμοιβές
+            </h4>
+            <div className="space-y-2 text-sm">
+              {employee.employeeType === 'monthly' && employee.fixedMonthlySalary != null && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Μηνιαίος μισθός:</span>
+                  <span className="font-medium">{employee.fixedMonthlySalary.toFixed(2)}€</span>
                 </div>
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                  <Calendar className="h-4 w-4 text-green-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ετήσιες Άδειες</p>
-                    <p className="font-semibold">{employee.totalAnnualLeaveDays} ημέρες</p>
-                  </div>
+              )}
+              {employee.employeeType === 'hourly' && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Ωριαία αμοιβή:</span>
+                  <span className="font-medium">{employee.hourlyRate.toFixed(2)}€/ώρα</span>
                 </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Αμοιβή υπερωρίας:</span>
+                <span className="font-medium">{employee.overtimeRate.toFixed(2)}€/ώρα</span>
               </div>
             </div>
-
-            {/* Contact Info */}
-            {(employee.email || employee.phone || employee.bankIban) && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
-                    Στοιχεία Επικοινωνίας
-                  </h3>
-                  <div className="space-y-2">
-                    {employee.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{employee.email}</span>
-                      </div>
-                    )}
-                    {employee.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{employee.phone}</span>
-                      </div>
-                    )}
-                    {employee.bankIban && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-mono">{employee.bankIban}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Change History */}
-            {changeHistory.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
-                    Ιστορικό Αλλαγών
-                  </h3>
-                  <div className="space-y-2">
-                    {[...changeHistory].reverse().map((entry, idx) => (
-                      <div key={idx} className="flex gap-3 text-sm p-2 rounded-lg bg-muted/30">
-                        <span className="text-muted-foreground whitespace-nowrap">{entry.date}</span>
-                        <span>{entry.description}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
           </div>
-        </ScrollArea>
+
+          <Separator />
+
+          {/* Leave Info */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Άδεια
+            </h4>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Ετήσιες ημέρες άδειας:</span>
+              <span className="font-medium">{Number(employee.totalAnnualLeaveDays)} ημέρες</span>
+            </div>
+          </div>
+
+          {/* Contact Info */}
+          {(employee.email || employee.phone || employee.bankIban) && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-semibold text-foreground mb-2">Στοιχεία Επικοινωνίας</h4>
+                <div className="space-y-2 text-sm">
+                  {employee.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span>{employee.email}</span>
+                    </div>
+                  )}
+                  {employee.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span>{employee.phone}</span>
+                    </div>
+                  )}
+                  {employee.bankIban && (
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-mono text-xs">{employee.bankIban}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

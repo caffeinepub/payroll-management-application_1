@@ -20,6 +20,18 @@ export const ShoppingItem = IDL.Record({
   'priceInCents' : IDL.Nat,
   'productDescription' : IDL.Text,
 });
+export const Employee = IDL.Record({
+  'id' : IDL.Nat,
+  'fixedMonthlySalary' : IDL.Opt(IDL.Float64),
+  'employeeType' : IDL.Text,
+  'hourlyRate' : IDL.Float64,
+  'fullName' : IDL.Text,
+  'bankIban' : IDL.Opt(IDL.Text),
+  'email' : IDL.Opt(IDL.Text),
+  'totalAnnualLeaveDays' : IDL.Nat,
+  'overtimeRate' : IDL.Float64,
+  'phone' : IDL.Opt(IDL.Text),
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
@@ -68,13 +80,16 @@ export const idlService = IDL.Service({
       [],
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'countEmployees' : IDL.Func([], [IDL.Nat], ['query']),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
       [IDL.Text],
       [],
     ),
+  'getAllEmployees' : IDL.Func([], [IDL.Vec(Employee)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getEmployee' : IDL.Func([IDL.Nat], [IDL.Opt(Employee)], ['query']),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -107,6 +122,18 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
     'priceInCents' : IDL.Nat,
     'productDescription' : IDL.Text,
+  });
+  const Employee = IDL.Record({
+    'id' : IDL.Nat,
+    'fixedMonthlySalary' : IDL.Opt(IDL.Float64),
+    'employeeType' : IDL.Text,
+    'hourlyRate' : IDL.Float64,
+    'fullName' : IDL.Text,
+    'bankIban' : IDL.Opt(IDL.Text),
+    'email' : IDL.Opt(IDL.Text),
+    'totalAnnualLeaveDays' : IDL.Nat,
+    'overtimeRate' : IDL.Float64,
+    'phone' : IDL.Opt(IDL.Text),
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const StripeSessionStatus = IDL.Variant({
@@ -153,13 +180,16 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'countEmployees' : IDL.Func([], [IDL.Nat], ['query']),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
         [IDL.Text],
         [],
       ),
+    'getAllEmployees' : IDL.Func([], [IDL.Vec(Employee)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getEmployee' : IDL.Func([IDL.Nat], [IDL.Opt(Employee)], ['query']),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],

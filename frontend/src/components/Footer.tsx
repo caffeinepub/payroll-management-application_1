@@ -1,21 +1,22 @@
-import { Heart } from 'lucide-react';
-
 export default function Footer() {
+  const year = new Date().getFullYear();
+  const appId = encodeURIComponent(window.location.hostname || 'payroll-app');
+
   return (
-    <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container py-6">
-        <p className="text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
-          © 2025. Δημιουργήθηκε με{' '}
-          <Heart className="h-4 w-4 text-red-500 fill-red-500" /> χρησιμοποιώντας{' '}
+    <footer className="border-t border-border bg-card mt-auto">
+      <div className="container mx-auto px-4 max-w-7xl py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
+        <span>© {year} Σύστημα Μισθοδοσίας</span>
+        <span>
+          Built with ❤️ using{' '}
           <a
-            href="https://caffeine.ai"
+            href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-foreground hover:text-primary transition-colors"
+            className="text-primary hover:underline font-medium"
           >
             caffeine.ai
           </a>
-        </p>
+        </span>
       </div>
     </footer>
   );

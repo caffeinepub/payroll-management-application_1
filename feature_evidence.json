@@ -1,4 +1,28 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-verify-and-fix-the-frontend-data-fetching-hooks-usequeries-ts-so-that-all-pages-employees-calendar-payments-payroll-monthly-bank-salaries-and-leave-correctly-fetch-and-display-data-returned-by-the-upgraded-backend-with-no-stale-cache-or-identity-gating-issues-preventing-data-from-rendering",
+      "featureTitle": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/EmployeesPage.tsx",
+        "frontend/src/pages/PaymentsPage.tsx"
+      ],
+      "components": [
+        "authorization@1.0.1",
+        "stripe@1.0.1",
+        "http-outcalls@1.1.1",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

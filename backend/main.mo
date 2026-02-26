@@ -3,12 +3,11 @@ import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 import Float "mo:base/Float";
-import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Principal "mo:base/Principal";
 import Stripe "stripe/stripe";
-import AccessControl "authorization/access-control";
 import OutCall "http-outcalls/outcall";
+import AccessControl "authorization/access-control";
 
 actor {
   // ============================================================================
@@ -18,6 +17,28 @@ actor {
   transient let natMap = OrderedMap.Make<Nat>(Nat.compare);
   transient let textMap = OrderedMap.Make<Text>(Text.compare);
   transient let principalMap = OrderedMap.Make<Principal>(Principal.compare);
+
+  // ============================================================================
+  // ACCESS CONTROL
+  // ============================================================================
+
+  let accessControlState = AccessControl.initState();
+
+  public shared ({ caller }) func initializeAccessControl() : async () {
+    AccessControl.initialize(accessControlState, caller);
+  };
+
+  public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
+    AccessControl.getUserRole(accessControlState, caller);
+  };
+
+  public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
+    AccessControl.assignRole(accessControlState, caller, user, role);
+  };
+
+  public query ({ caller }) func isCallerAdmin() : async Bool {
+    AccessControl.isAdmin(accessControlState, caller);
+  };
 
   // ============================================================================
   // EMPLOYEE MANAGEMENT TYPES
@@ -93,9 +114,9 @@ actor {
   };
 
   public type ChangeHistoryEntry = {
-    date : Text; // Date of the change
-    changeType : Text; // Type of change (hourlyRate, overtimeRate, salary, leave)
-    description : Text; // Description in Greek (e.g., "Ωριαία αμοιβή από 5 € σε 6 €")
+    date : Text;
+    changeType : Text;
+    description : Text;
   };
 
   public type ChangeHistory = [ChangeHistoryEntry];
@@ -146,30 +167,12 @@ actor {
   var stripeConfiguration : ?Stripe.StripeConfiguration = null;
 
   // ============================================================================
-  // ACCESS CONTROL & AUTHORIZATION
+  // USER PROFILE FUNCTIONS
   // ============================================================================
-
-  let accessControlState = AccessControl.initState();
-
-  public shared ({ caller }) func initializeAccessControl() : async () {
-    AccessControl.initialize(accessControlState, caller);
-  };
-
-  public query ({ caller }) func getCallerUserRole() : async AccessControl.UserRole {
-    AccessControl.getUserRole(accessControlState, caller);
-  };
-
-  public shared ({ caller }) func assignCallerUserRole(user : Principal, role : AccessControl.UserRole) : async () {
-    AccessControl.assignRole(accessControlState, caller, user, role);
-  };
-
-  public query ({ caller }) func isCallerAdmin() : async Bool {
-    AccessControl.isAdmin(accessControlState, caller);
-  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Debug.trap("Unauthorized: Only users can view profiles");
+      Debug.trap("Unauthorized: Only users can access profiles");
     };
     principalMap.get(userProfiles, caller);
   };
@@ -200,8 +203,8 @@ actor {
   };
 
   public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Debug.trap("Unauthorized: Only users can perform this action");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can configure Stripe");
     };
     stripeConfiguration := ?config;
   };
@@ -213,11 +216,17 @@ actor {
     };
   };
 
-  public func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+  public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can check session status");
+    };
     await Stripe.getSessionStatus(getStripeConfiguration(), sessionId, transform);
   };
 
   public shared ({ caller }) func createCheckoutSession(items : [Stripe.ShoppingItem], successUrl : Text, cancelUrl : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can create checkout sessions");
+    };
     await Stripe.createCheckoutSession(getStripeConfiguration(), caller, items, successUrl, cancelUrl, transform);
   };
 
@@ -281,8 +290,8 @@ actor {
     bankIban : ?Text,
     employeeType : Text,
   ) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Debug.trap("Unauthorized: Only users can perform this action");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Debug.trap("Unauthorized: Only admins can add employees");
     };
 
     if (Text.size(fullName) == 0) {
@@ -301,12 +310,8 @@ actor {
         };
         rate;
       };
-      case ("monthly") {
-        parseFloat(hourlyRate);
-      };
-      case (_) {
-        Debug.trap("Μη έγκυρος τύπος εργαζομένου");
-      };
+      case ("monthly") { parseFloat(hourlyRate) };
+      case (_) { Debug.trap("Μη έγκυρος τύπος εργαζομένου") };
     };
 
     let parsedOvertimeRate = parseFloat(overtimeRate);
@@ -374,6 +379,24 @@ actor {
     employeeId;
   };
 
-  // ... (rest of the code remains unchanged)
+  public query ({ caller }) func getEmployee(id : Nat) : async ?Employee {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can view employees");
+    };
+    natMap.get(employees, id);
+  };
 
+  public query ({ caller }) func getAllEmployees() : async [Employee] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can view employees");
+    };
+    Iter.toArray(natMap.vals(employees));
+  };
+
+  public query ({ caller }) func countEmployees() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Debug.trap("Unauthorized: Only users can count employees");
+    };
+    natMap.size(employees);
+  };
 };

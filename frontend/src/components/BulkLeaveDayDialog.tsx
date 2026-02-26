@@ -1,73 +1,73 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { useAddBulkLeaveDay } from '../hooks/useQueries';
-import { format } from 'date-fns';
-import { Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useAddBulkLeaveDay, useGetEmployees } from '../hooks/useQueries';
+import { toast } from 'sonner';
 
 interface BulkLeaveDayDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
 }
 
-export default function BulkLeaveDayDialog({
-  open,
-  onOpenChange,
-}: BulkLeaveDayDialogProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+export default function BulkLeaveDayDialog({ open, onClose }: BulkLeaveDayDialogProps) {
   const addBulkLeaveDay = useAddBulkLeaveDay();
+  const { data: employees = [] } = useGetEmployees();
+  const [date, setDate] = useState('');
 
-  const handleSave = async () => {
-    if (!selectedDate) return;
-
-    const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const handleSubmit = async () => {
+    if (!date) return;
 
     try {
-      await addBulkLeaveDay.mutateAsync(dateString);
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error adding bulk leave day:', error);
+      const employeeIds = employees.map((e) => Number(e.id));
+      await addBulkLeaveDay.mutateAsync({ date, employeeIds });
+      toast.success('Η μαζική άδεια καταχωρήθηκε');
+      onClose();
+    } catch {
+      toast.error('Σφάλμα κατά την καταχώρηση');
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Μαζική Προσθήκη Ημέρας Άδειας
-          </DialogTitle>
-          <DialogDescription>
-            Προσθέστε ημέρα άδειας για όλους τους εργαζόμενους ταυτόχρονα
-          </DialogDescription>
+          <DialogTitle>Μαζική Καταχώρηση Άδειας</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-3 text-sm text-blue-900 dark:text-blue-100">
-            <p className="font-medium mb-1">Σημείωση:</p>
-            <p>
-              Η άδεια θα προστεθεί σε όλους τους εργαζόμενους. Για ωριαίους: 8 ώρες × ωριαία αμοιβή. Για μηνιαίους: αφαίρεση 1 ημέρας.
-            </p>
-          </div>
 
-          <div className="grid gap-2">
-            <Label>Επιλέξτε Ημερομηνία</Label>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border"
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-muted-foreground">
+            Καταχώρηση άδειας για όλους τους εργαζόμενους ({employees.length}) την ίδια ημέρα.
+          </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="bulkLeaveDate">Ημερομηνία</Label>
+            <Input
+              id="bulkLeaveDate"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
             />
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={addBulkLeaveDay.isPending}>
+          <Button variant="outline" onClick={onClose}>
             Ακύρωση
           </Button>
-          <Button onClick={handleSave} disabled={!selectedDate || addBulkLeaveDay.isPending}>
-            {addBulkLeaveDay.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
+          <Button
+            onClick={handleSubmit}
+            disabled={addBulkLeaveDay.isPending || !date}
+          >
+            {addBulkLeaveDay.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Καταχώρηση
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,67 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Remove admin permission checks to allow all users full app access",
-  "requirements": []
+  "title": "Restore data visibility after version upgrade — fix state migration (Frontend)",
+  "requirements": [
+    {
+      "id": "REQ-3",
+      "summary": "Fix frontend data-fetching hooks to correctly display restored backend data after upgrade",
+      "acceptanceCriteria": [
+        "The Employees page lists all previously added employees after login.",
+        "The Calendar page shows previously entered work hours for all employees.",
+        "The Payments page displays all previously recorded payment entries.",
+        "The Payroll page computes and displays correct salary totals using the restored data.",
+        "The Monthly Bank Salaries page shows all previously set salary records.",
+        "The Leave page shows all previously recorded leave days per employee.",
+        "React Query cache is properly invalidated after the actor becomes available, ensuring data loads without requiring a manual page refresh."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review and fix all data-fetching hooks (useGetEmployees, useGetWorkDays, useGetPayments, useGetPayroll, useGetMonthlyBankSalaries, useGetLeaveRecords) to ensure they are properly enabled when the actor is available and handle the restored backend data correctly. Verify that React Query's enabled flag checks both actor availability and authentication state. Ensure retry logic and staleTime configurations allow proper data refresh after upgrade. Add explicit refetchOnMount: true for critical queries to force data reload when components mount after the canister upgrade."
+        },
+        {
+          "path": "frontend/src/hooks/useActor.ts",
+          "operation": "modify",
+          "description": "Verify that queryClient.invalidateQueries() is called immediately after the actor becomes available post-upgrade to clear any stale cache and trigger refetching of all employee, work day, payment, leave, and salary data. Ensure the actor initialization sequence properly waits for Internet Identity authentication before making backend calls. Add logging to confirm cache invalidation fires after actor setup."
+        },
+        {
+          "path": "frontend/src/pages/EmployeesPage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetEmployees hook is correctly wired and that loading/error states are properly handled. Ensure that after the backend upgrade, the employees list renders all previously added employees without requiring manual refresh. Add a visual indicator if data is being refetched post-upgrade."
+        },
+        {
+          "path": "frontend/src/pages/CalendarPage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetWorkDays hook is correctly wired for both monthly and daily bulk entry tabs. Ensure that after the backend upgrade, all previously entered work hours appear in the calendar without requiring manual refresh. Confirm that the month/year filters correctly trigger data refetching when changed."
+        },
+        {
+          "path": "frontend/src/pages/PaymentsPage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetPayments hook is correctly wired and that all previously recorded payment entries (both cash and bank) are displayed after the backend upgrade. Ensure the monthly payments view correctly filters and displays restored payment data. Add a visual indicator if data is being refetched post-upgrade."
+        },
+        {
+          "path": "frontend/src/pages/PayrollPage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetPayroll hook is correctly wired and that payroll calculations using the restored work days, payments, and salary data produce correct totals. Ensure the page displays accurate salary cards per employee for the selected month/year after the backend upgrade. Confirm aggregate totals (total salary, cash payments, bank payments) are computed correctly from the restored data."
+        },
+        {
+          "path": "frontend/src/pages/MonthlyBankSalariesPage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetMonthlyBankSalaries hook is correctly wired and that all previously set monthly bank salary records are displayed after the backend upgrade. Ensure the bulk entry, individual entry, and view tabs all correctly fetch and render restored salary data. Add a visual indicator if data is being refetched post-upgrade."
+        },
+        {
+          "path": "frontend/src/pages/LeavePage.tsx",
+          "operation": "modify",
+          "description": "Verify the useGetLeaveRecords hook is correctly wired and that all previously recorded leave days per employee are displayed after the backend upgrade. Ensure the leave cards correctly show the restored leave data and that filtering by employee works as expected. Add a visual indicator if data is being refetched post-upgrade."
+        },
+        {
+          "path": "frontend/src/main.tsx",
+          "operation": "modify",
+          "description": "Verify the QueryClientProvider configuration does not have overly aggressive caching or staleTime settings that would prevent data from being refetched after a canister upgrade. Ensure the default query settings allow proper cache invalidation and refetching when the actor becomes available post-upgrade."
+        }
+      ]
+    }
+  ]
 }

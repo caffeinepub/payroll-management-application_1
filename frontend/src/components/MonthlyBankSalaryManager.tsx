@@ -1,60 +1,78 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Info } from 'lucide-react';
-import MonthlyBankSalaryDialog from './MonthlyBankSalaryDialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { useState } from 'react';
+import { Loader2, Save } from 'lucide-react';
+import { useSetMonthlyBankSalary, useGetMonthlyBankSalaries, useGetEmployees } from '../hooks/useQueries';
+import { toast } from 'sonner';
 
 interface MonthlyBankSalaryManagerProps {
   employeeId: number;
-  employeeName: string;
-  defaultSalary: number | null;
+  month: number;
+  year: number;
 }
 
 export default function MonthlyBankSalaryManager({
   employeeId,
-  employeeName,
-  defaultSalary,
+  month,
+  year,
 }: MonthlyBankSalaryManagerProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const { data: employees = [] } = useGetEmployees();
+  const employee = employees.find((e) => Number(e.id) === employeeId);
+  const { data: allSalaries = [] } = useGetMonthlyBankSalaries(month, year);
+  const existing = allSalaries.find((s) => s.employeeId === employeeId);
+  const setMonthlyBankSalary = useSetMonthlyBankSalary();
 
-  const defaultSalaryDisplay = defaultSalary !== null ? `${defaultSalary.toFixed(2)}€` : 'Δεν έχει οριστεί';
+  const [amount, setAmount] = useState('');
+
+  const handleSave = async () => {
+    try {
+      await setMonthlyBankSalary.mutateAsync({
+        employeeId,
+        month,
+        year,
+        amount: parseFloat(amount.replace(',', '.')) || 0,
+      });
+      toast.success('Αποθηκεύτηκε');
+      setAmount('');
+    } catch {
+      toast.error('Σφάλμα κατά την αποθήκευση');
+    }
+  };
+
+  if (!employee) return null;
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Μηνιαίοι Μισθοί Τράπεζας
-            </CardTitle>
-            <CardDescription>
-              Ορίστε διαφορετικό μισθό τράπεζας για κάθε μήνα. Προεπιλογή: {defaultSalaryDisplay}
-            </CardDescription>
-          </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Προσθήκη
-          </Button>
-        </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">{employee.fullName}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertDescription className="text-blue-800 dark:text-blue-300">
-            <strong>Σημείωση:</strong> Η λειτουργία προβολής και διαγραφής μηνιαίων μισθών δεν είναι διαθέσιμη προς το παρόν.
-            Μπορείτε να προσθέσετε νέους μηνιαίους μισθούς που θα αντικαταστήσουν τον προεπιλεγμένο μισθό για συγκεκριμένους μήνες.
-          </AlertDescription>
-        </Alert>
+        {existing && (
+          <p className="text-sm text-muted-foreground mb-2">
+            Τρέχον ποσό: <span className="font-medium text-foreground">{existing.amount.toFixed(2)}€</span>
+          </p>
+        )}
+        <div className="flex gap-2 items-center">
+          <Input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder={existing ? existing.amount.toFixed(2) : '0.00'}
+            className="flex-1"
+            type="number"
+            step="0.01"
+            min="0"
+          />
+          <Button onClick={handleSave} disabled={setMonthlyBankSalary.isPending} size="sm" className="gap-1">
+            {setMonthlyBankSalary.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            Αποθήκευση
+          </Button>
+        </div>
       </CardContent>
-
-      <MonthlyBankSalaryDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        employeeId={employeeId}
-        employeeName={employeeName}
-      />
     </Card>
   );
 }
