@@ -1,266 +1,236 @@
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import type { Employee } from '../backend';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAddEmployee, useUpdateEmployee } from '../hooks/useQueries';
+import type { Employee } from '../types';
+import { toast } from 'sonner';
 
-export interface EmployeeDialogProps {
+interface EmployeeDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /** Pass an Employee object to edit, or null/undefined to add a new one */
   employee?: Employee | null;
-  /** @deprecated use employee prop instead */
-  mode?: 'add' | 'edit';
+  onClose: () => void;
 }
 
-export default function EmployeeDialog({ open, onOpenChange, employee, mode }: EmployeeDialogProps) {
-  const isEdit = !!(employee ?? (mode === 'edit'));
-
-  const [fullName, setFullName] = useState('');
-  const [employeeType, setEmployeeType] = useState<'monthly' | 'hourly'>('monthly');
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [overtimeRate, setOvertimeRate] = useState('');
-  const [fixedMonthlySalary, setFixedMonthlySalary] = useState('');
-  const [totalAnnualLeaveDays, setTotalAnnualLeaveDays] = useState('0');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [bankIban, setBankIban] = useState('');
-
+export default function EmployeeDialog({ open, employee, onClose }: EmployeeDialogProps) {
+  const isEdit = !!employee;
   const addEmployee = useAddEmployee();
   const updateEmployee = useUpdateEmployee();
 
-  const isLoading = addEmployee.isPending || updateEmployee.isPending;
+  const [form, setForm] = useState({
+    fullName: '',
+    employeeType: 'monthly',
+    hourlyRate: '',
+    overtimeRate: '',
+    fixedMonthlySalary: '',
+    totalAnnualLeaveDays: '0',
+    email: '',
+    phone: '',
+    bankIban: '',
+  });
 
   useEffect(() => {
-    if (open) {
-      if (employee) {
-        setFullName(employee.fullName);
-        setEmployeeType(employee.employeeType as 'monthly' | 'hourly');
-        setHourlyRate(employee.hourlyRate.toString());
-        setOvertimeRate(employee.overtimeRate.toString());
-        setFixedMonthlySalary(employee.fixedMonthlySalary?.toString() ?? '');
-        setTotalAnnualLeaveDays(Number(employee.totalAnnualLeaveDays).toString());
-        setEmail(employee.email ?? '');
-        setPhone(employee.phone ?? '');
-        setBankIban(employee.bankIban ?? '');
-      } else {
-        setFullName('');
-        setEmployeeType('monthly');
-        setHourlyRate('');
-        setOvertimeRate('');
-        setFixedMonthlySalary('');
-        setTotalAnnualLeaveDays('0');
-        setEmail('');
-        setPhone('');
-        setBankIban('');
-      }
+    if (employee) {
+      setForm({
+        fullName: employee.fullName,
+        employeeType: employee.employeeType,
+        hourlyRate: employee.hourlyRate.toString(),
+        overtimeRate: employee.overtimeRate.toString(),
+        fixedMonthlySalary: employee.fixedMonthlySalary?.toString() ?? '',
+        totalAnnualLeaveDays: employee.totalAnnualLeaveDays.toString(),
+        email: employee.email ?? '',
+        phone: employee.phone ?? '',
+        bankIban: employee.bankIban ?? '',
+      });
+    } else {
+      setForm({
+        fullName: '',
+        employeeType: 'monthly',
+        hourlyRate: '',
+        overtimeRate: '',
+        fixedMonthlySalary: '',
+        totalAnnualLeaveDays: '0',
+        email: '',
+        phone: '',
+        bankIban: '',
+      });
     }
-  }, [open, employee]);
+  }, [employee, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!fullName.trim()) {
+  const handleSave = async () => {
+    if (!form.fullName.trim()) {
       toast.error('Το όνομα είναι υποχρεωτικό');
       return;
     }
-    if (!overtimeRate || parseFloat(overtimeRate) <= 0) {
-      toast.error('Η αμοιβή υπερωρίας είναι υποχρεωτική');
-      return;
-    }
-    if (employeeType === 'monthly' && (!fixedMonthlySalary || parseFloat(fixedMonthlySalary) <= 0)) {
+    if (form.employeeType === 'monthly' && !form.fixedMonthlySalary) {
       toast.error('Ο μηνιαίος μισθός είναι υποχρεωτικός');
       return;
     }
-    if (employeeType === 'hourly' && (!hourlyRate || parseFloat(hourlyRate) <= 0)) {
+    if (form.employeeType === 'hourly' && !form.hourlyRate) {
       toast.error('Η ωριαία αμοιβή είναι υποχρεωτική');
+      return;
+    }
+    if (!form.overtimeRate) {
+      toast.error('Η αμοιβή υπερωρίας είναι υποχρεωτική');
       return;
     }
 
     try {
-      if (employee) {
-        // Edit mode
+      if (isEdit && employee) {
         await updateEmployee.mutateAsync({
-          id: Number(employee.id),
-          fullName: fullName.trim(),
-          hourlyRate: hourlyRate || '0',
-          overtimeRate,
-          fixedMonthlySalary: employeeType === 'monthly' ? fixedMonthlySalary : undefined,
-          totalAnnualLeaveDays: parseInt(totalAnnualLeaveDays) || 0,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined,
-          bankIban: bankIban.trim() || undefined,
-          employeeType,
+          id: employee.id,
+          fullName: form.fullName.trim(),
+          employeeType: form.employeeType,
+          hourlyRate: parseFloat(form.hourlyRate) || 0,
+          overtimeRate: parseFloat(form.overtimeRate) || 0,
+          fixedMonthlySalary: form.fixedMonthlySalary ? parseFloat(form.fixedMonthlySalary) : undefined,
+          totalAnnualLeaveDays: parseInt(form.totalAnnualLeaveDays) || 0,
+          email: form.email || undefined,
+          phone: form.phone || undefined,
+          bankIban: form.bankIban || undefined,
         });
-        toast.success('Ο εργαζόμενος ενημερώθηκε επιτυχώς');
+        toast.success('Ο υπάλληλος ενημερώθηκε');
       } else {
-        // Add mode
         await addEmployee.mutateAsync({
-          fullName: fullName.trim(),
-          hourlyRate: hourlyRate || '0',
-          overtimeRate,
-          fixedMonthlySalary: employeeType === 'monthly' ? fixedMonthlySalary : undefined,
-          totalAnnualLeaveDays: parseInt(totalAnnualLeaveDays) || 0,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined,
-          bankIban: bankIban.trim() || undefined,
-          employeeType,
+          fullName: form.fullName.trim(),
+          employeeType: form.employeeType,
+          hourlyRate: form.hourlyRate,
+          overtimeRate: form.overtimeRate,
+          fixedMonthlySalary: form.fixedMonthlySalary || undefined,
+          totalAnnualLeaveDays: parseInt(form.totalAnnualLeaveDays) || 0,
+          email: form.email || undefined,
+          phone: form.phone || undefined,
+          bankIban: form.bankIban || undefined,
         });
-        toast.success('Ο εργαζόμενος προστέθηκε επιτυχώς');
+        toast.success('Ο υπάλληλος προστέθηκε');
       }
-      onOpenChange(false);
+      onClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Σφάλμα κατά την αποθήκευση';
-      toast.error(message);
+      const msg = err instanceof Error ? err.message : 'Σφάλμα κατά την αποθήκευση';
+      toast.error(msg);
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? 'Επεξεργασία Εργαζομένου' : 'Προσθήκη Εργαζομένου'}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Ονοματεπώνυμο *</Label>
-            <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="π.χ. Γιώργος Παπαδόπουλος"
-              required
-            />
-          </div>
+  const isPending = addEmployee.isPending || updateEmployee.isPending;
 
+  return (
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Επεξεργασία Υπαλλήλου' : 'Νέος Υπάλληλος'}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Τύπος Εργαζομένου *</Label>
-            <Select value={employeeType} onValueChange={(v) => setEmployeeType(v as 'monthly' | 'hourly')}>
+            <Label>Τύπος Εργαζομένου</Label>
+            <Select value={form.employeeType} onValueChange={v => setForm(f => ({ ...f, employeeType: v }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="monthly">Μηνιαίος Μισθός</SelectItem>
+                <SelectItem value="monthly">Μηνιαίος</SelectItem>
                 <SelectItem value="hourly">Ωρομίσθιος</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {employeeType === 'monthly' && (
+          <div className="space-y-2">
+            <Label>Ονοματεπώνυμο *</Label>
+            <Input
+              value={form.fullName}
+              onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
+              placeholder="Εισάγετε ονοματεπώνυμο"
+            />
+          </div>
+
+          {form.employeeType === 'monthly' && (
             <div className="space-y-2">
-              <Label htmlFor="fixedMonthlySalary">Μηνιαίος Μισθός (€) *</Label>
+              <Label>Μηνιαίος Μισθός (€) *</Label>
               <Input
-                id="fixedMonthlySalary"
                 type="number"
-                min="0"
                 step="0.01"
-                value={fixedMonthlySalary}
-                onChange={(e) => setFixedMonthlySalary(e.target.value)}
-                placeholder="π.χ. 1500.00"
+                value={form.fixedMonthlySalary}
+                onChange={e => setForm(f => ({ ...f, fixedMonthlySalary: e.target.value }))}
+                placeholder="π.χ. 1200.00"
               />
             </div>
           )}
 
-          {employeeType === 'hourly' && (
+          {form.employeeType === 'hourly' && (
             <div className="space-y-2">
-              <Label htmlFor="hourlyRate">Ωριαία Αμοιβή (€) *</Label>
+              <Label>Ωριαία Αμοιβή (€) *</Label>
               <Input
-                id="hourlyRate"
                 type="number"
-                min="0"
                 step="0.01"
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(e.target.value)}
-                placeholder="π.χ. 8.00"
+                value={form.hourlyRate}
+                onChange={e => setForm(f => ({ ...f, hourlyRate: e.target.value }))}
+                placeholder="π.χ. 8.50"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="overtimeRate">Αμοιβή Υπερωρίας (€/ώρα) *</Label>
+            <Label>Αμοιβή Υπερωρίας (€/ώρα) *</Label>
             <Input
-              id="overtimeRate"
               type="number"
-              min="0"
               step="0.01"
-              value={overtimeRate}
-              onChange={(e) => setOvertimeRate(e.target.value)}
+              value={form.overtimeRate}
+              onChange={e => setForm(f => ({ ...f, overtimeRate: e.target.value }))}
               placeholder="π.χ. 12.00"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="totalAnnualLeaveDays">Ετήσιες Ημέρες Άδειας</Label>
+            <Label>Ετήσιες Ημέρες Άδειας</Label>
             <Input
-              id="totalAnnualLeaveDays"
               type="number"
-              min="0"
-              value={totalAnnualLeaveDays}
-              onChange={(e) => setTotalAnnualLeaveDays(e.target.value)}
+              value={form.totalAnnualLeaveDays}
+              onChange={e => setForm(f => ({ ...f, totalAnnualLeaveDays: e.target.value }))}
               placeholder="π.χ. 20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label>Email</Label>
             <Input
-              id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               placeholder="email@example.com"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Τηλέφωνο</Label>
+            <Label>Τηλέφωνο</Label>
             <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
               placeholder="π.χ. 6912345678"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bankIban">IBAN Τράπεζας</Label>
+            <Label>IBAN Τράπεζας</Label>
             <Input
-              id="bankIban"
-              value={bankIban}
-              onChange={(e) => setBankIban(e.target.value)}
-              placeholder="π.χ. GR1601101250000000012300695"
+              value={form.bankIban}
+              onChange={e => setForm(f => ({ ...f, bankIban: e.target.value }))}
+              placeholder="GR..."
             />
           </div>
+        </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Ακύρωση
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isEdit ? 'Αποθήκευση' : 'Προσθήκη'}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
+            Ακύρωση
+          </Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

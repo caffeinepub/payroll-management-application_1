@@ -1,123 +1,113 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { useGetEmployees, useGetPayments } from '../hooks/useQueries';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { CreditCard, Building2 } from 'lucide-react';
 import BulkPaymentEntryTable from '../components/BulkPaymentEntryTable';
-import PaymentEditDialog from '../components/PaymentEditDialog';
-import { useGetPayments, useGetEmployees, PaymentRecord } from '../hooks/useQueries';
-import type { Employee } from '../backend';
+import MonthlyPaymentsView from '../components/MonthlyPaymentsView';
 
 const MONTHS = [
-  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
-  'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
+  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
+  'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
+  'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
 ];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export default function PaymentsPage() {
   const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
-  const [addPaymentOpen, setAddPaymentOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
-  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
+  const { data: payments = [] } = useGetPayments(undefined, selectedMonth, selectedYear);
+
+  const totalCash = payments.reduce((sum, p) => sum + p.cashPayment, 0);
+  const totalBank = payments.reduce((sum, p) => sum + p.bankPayment, 0);
+
+  const fmt = (n: number) =>
+    n.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Πληρωμές</h1>
-          <p className="text-muted-foreground text-sm mt-1">Διαχείριση πληρωμών σε μετρητά και τράπεζα</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Καταχώρηση και παρακολούθηση πληρωμών
+          </p>
         </div>
-        <Button onClick={() => setAddPaymentOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Νέα Πληρωμή
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select
+            value={String(selectedMonth)}
+            onValueChange={(v) => setSelectedMonth(Number(v))}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i + 1} value={String(i + 1)}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(selectedYear)}
+            onValueChange={(v) => setSelectedYear(Number(v))}
+          >
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="w-4 h-4 text-green-600" />
+              <span className="text-xs text-muted-foreground">Σύνολο Μετρητά</span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{fmt(totalCash)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span className="text-xs text-muted-foreground">Σύνολο Τράπεζα</span>
+            </div>
+            <p className="text-xl font-bold text-foreground">{fmt(totalBank)}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="bulk">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="mb-4">
           <TabsTrigger value="bulk">Μαζική Καταχώρηση</TabsTrigger>
-          <TabsTrigger value="monthly">Μηνιαία Προβολή</TabsTrigger>
+          <TabsTrigger value="view">Προβολή Πληρωμών</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="bulk" className="mt-4">
-          <BulkPaymentEntryTable />
+        <TabsContent value="bulk">
+          <BulkPaymentEntryTable month={selectedMonth} year={selectedYear} />
         </TabsContent>
 
-        <TabsContent value="monthly" className="mt-4">
-          <div className="flex gap-3 mb-4 flex-wrap">
-            <select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-            >
-              {MONTHS.map((m, i) => (
-                <option key={i + 1} value={i + 1}>{m}</option>
-              ))}
-            </select>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
-          <MonthlyPaymentsView month={month} year={year} />
+        <TabsContent value="view">
+          <MonthlyPaymentsView month={selectedMonth} year={selectedYear} />
         </TabsContent>
       </Tabs>
-
-      <PaymentEditDialog open={addPaymentOpen} onOpenChange={setAddPaymentOpen} />
-    </div>
-  );
-}
-
-function MonthlyPaymentsView({ month, year }: { month: number; year: number }) {
-  // useGetPayments(month, year) — no employeeId means all employees
-  const { data: payments = [] } = useGetPayments(month, year);
-  const { data: employees = [] } = useGetEmployees();
-
-  const employeeMap = new Map<number, string>(
-    employees.map((e: Employee) => [Number(e.id), e.fullName])
-  );
-
-  if (payments.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        Δεν υπάρχουν πληρωμές για αυτόν τον μήνα.
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="bg-muted">
-            <th className="border border-border px-4 py-2 text-left">Εργαζόμενος</th>
-            <th className="border border-border px-4 py-2 text-right">Μετρητά (€)</th>
-            <th className="border border-border px-4 py-2 text-right">Τράπεζα (€)</th>
-            <th className="border border-border px-4 py-2 text-right">Σύνολο (€)</th>
-            <th className="border border-border px-4 py-2 text-center">Ημερομηνία</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payments.map((p: PaymentRecord) => (
-            <tr key={p.id} className="hover:bg-muted/30">
-              <td className="border border-border px-4 py-2">
-                {employeeMap.get(p.employeeId) ?? `Εργαζόμενος #${p.employeeId}`}
-              </td>
-              <td className="border border-border px-4 py-2 text-right">{p.cashPayment.toFixed(2)}</td>
-              <td className="border border-border px-4 py-2 text-right">{p.bankPayment.toFixed(2)}</td>
-              <td className="border border-border px-4 py-2 text-right font-medium">
-                {(p.cashPayment + p.bankPayment).toFixed(2)}
-              </td>
-              <td className="border border-border px-4 py-2 text-center">{p.paymentDate}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

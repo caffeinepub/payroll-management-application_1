@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useGetEmployees, useSetMonthlyBankSalariesBulk, MonthlyBankSalary } from '../hooks/useQueries';
+import { useGetEmployees, useSetMonthlyBankSalariesBulk } from '../hooks/useQueries';
+import type { MonthlyBankSalary } from '../types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -39,7 +40,7 @@ export default function BulkMonthlyBankSalaryDialog({
   };
 
   const handleSaveAll = async () => {
-    const entries: Omit<MonthlyBankSalary, 'id'>[] = [];
+    const entries: { employeeId: number; month: number; year: number; amount: number }[] = [];
 
     for (const employee of employees) {
       const empId = Number(employee.id);

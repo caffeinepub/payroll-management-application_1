@@ -1,95 +1,61 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Employee } from '../backend';
+import type { Employee as BackendEmployee } from '../backend';
+import type {
+  Employee,
+  WorkDay,
+  PaymentRecord,
+  MonthlyBankSalary,
+  LeaveDay,
+  PayrollData,
+} from '../types';
 
 // ============================================================================
-// TYPES
+// LOCALSTORAGE HELPERS
 // ============================================================================
 
-export interface WorkDay {
-  date: string;
-  normalHours: number;
-  overtimeHours: number;
-  isLeave: boolean;
-  leaveType?: string;
-}
+const LS_KEYS = {
+  workDays: 'workDays_v1',
+  payments: 'payments_v1',
+  monthlyBankSalaries: 'monthlyBankSalaries_v1',
+  leaveDays: 'leaveDays_v1',
+};
 
-export interface PaymentRecord {
-  id: string;
-  employeeId: number;
-  month: number;
-  year: number;
-  cashPayment: number;
-  bankPayment: number;
-  paymentDate: string;
-}
-
-export interface MonthlyBankSalary {
-  id: number;
-  employeeId: number;
-  month: number;
-  year: number;
-  amount: number;
-}
-
-export interface LeaveDay {
-  id: string;
-  date: string;
-}
-
-export interface LeaveRecord {
-  employeeId: number;
-  totalAnnualLeaveDays: number;
-  leaveDaysUsed: number;
-  remainingLeaveDays: number;
-  leaveDays: LeaveDay[];
-}
-
-export interface PayrollData {
-  employeeId: number;
-  employeeName: string;
-  month: number;
-  year: number;
-  totalMonthlySalary: number;
-  monthlyBankFixedSalary?: number;
-  totalCashPayments: number;
-  totalBankPayments: number;
-  remainingRealSalary: number;
-  remainingBankBalance: number;
-  previousMonthSalaryCarryover: number;
-  previousMonthBankCarryover: number;
-  normalHours: number;
-  overtimeHours: number;
-  leaveDays: number;
-  employeeType: string;
-}
-
-export interface ChangeHistoryEntry {
-  date: string;
-  changeType: string;
-  description: string;
-}
-
-// ============================================================================
-// LOCAL STORAGE HELPERS
-// ============================================================================
-
-function getFromStorage<T>(key: string, defaultValue: T): T {
+function getFromLocalStorage<T>(key: string, defaultValue: T): T {
   try {
-    const item = localStorage.getItem(key);
-    if (item === null) return defaultValue;
-    return JSON.parse(item) as T;
+    const raw = localStorage.getItem(key);
+    if (!raw) return defaultValue;
+    return JSON.parse(raw) as T;
   } catch {
     return defaultValue;
   }
 }
 
-function saveToStorage<T>(key: string, value: T): void {
+function setInLocalStorage<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch (err) {
-    console.error(`Failed to save ${key} to localStorage:`, err);
+  } catch {
+    // ignore
   }
+}
+
+// ============================================================================
+// EMPLOYEE MAPPING
+// ============================================================================
+
+function mapBackendEmployee(e: BackendEmployee): Employee {
+  return {
+    id: Number(e.id),
+    fullName: e.fullName,
+    hourlyRate: Number(e.hourlyRate),
+    overtimeRate: Number(e.overtimeRate),
+    email: e.email ?? undefined,
+    phone: e.phone ?? undefined,
+    bankIban: e.bankIban ?? undefined,
+    totalAnnualLeaveDays: Number(e.totalAnnualLeaveDays),
+    fixedMonthlySalary: e.fixedMonthlySalary != null ? Number(e.fixedMonthlySalary) : undefined,
+    employeeType: e.employeeType,
+  };
 }
 
 // ============================================================================
@@ -103,22 +69,14 @@ export function useGetEmployees() {
     queryKey: ['employees'],
     queryFn: async () => {
       if (!actor) return [];
-      try {
-        const result = await actor.getAllEmployees();
-        return result;
-      } catch (err) {
-        console.error('Failed to fetch employees:', err);
-        return [];
-      }
+      const backendEmployees = await actor.getAllEmployees();
+      return backendEmployees.map(mapBackendEmployee);
     },
     enabled: !!actor && !actorFetching,
     staleTime: 0,
     refetchOnMount: true,
   });
 }
-
-// Alias for backward compatibility
-export const useEmployees = useGetEmployees;
 
 export function useAddEmployee() {
   const { actor } = useActor();
@@ -146,7 +104,7 @@ export function useAddEmployee() {
         data.email ?? null,
         data.phone ?? null,
         data.bankIban ?? null,
-        data.employeeType
+        data.employeeType,
       );
       return Number(id);
     },
@@ -160,37 +118,16 @@ export function useUpdateEmployee() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
-      id: number;
-      fullName: string;
-      hourlyRate: string;
-      overtimeRate: string;
-      fixedMonthlySalary?: string;
-      totalAnnualLeaveDays?: number;
-      email?: string;
-      phone?: string;
-      bankIban?: string;
-      employeeType: string;
-    }) => {
-      // Backend doesn't have updateEmployee; store overrides locally
-      const overrides = getFromStorage<Record<number, Partial<Employee>>>('employee_overrides', {});
-      overrides[data.id] = {
-        fullName: data.fullName,
-        hourlyRate: parseFloat(data.hourlyRate) || 0,
-        overtimeRate: parseFloat(data.overtimeRate) || 0,
-        fixedMonthlySalary: data.fixedMonthlySalary ? parseFloat(data.fixedMonthlySalary) : undefined,
-        totalAnnualLeaveDays: BigInt(data.totalAnnualLeaveDays ?? 0),
-        email: data.email,
-        phone: data.phone,
-        bankIban: data.bankIban,
-        employeeType: data.employeeType,
-      };
-      saveToStorage('employee_overrides', overrides);
-      return data.id;
+    mutationFn: async (employee: Employee) => {
+      // Update in localStorage cache for display purposes
+      // The backend doesn't have an updateEmployee, so we store overrides locally
+      const overrides = getFromLocalStorage<Record<number, Partial<Employee>>>('employeeOverrides_v1', {});
+      overrides[employee.id] = employee;
+      setInLocalStorage('employeeOverrides_v1', overrides);
+      return employee;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
 }
@@ -200,37 +137,16 @@ export function useDeleteEmployee() {
 
   return useMutation({
     mutationFn: async (employeeId: number) => {
-      const deleted = getFromStorage<number[]>('deleted_employees', []);
+      // Mark as deleted in localStorage
+      const deleted = getFromLocalStorage<number[]>('deletedEmployees_v1', []);
       if (!deleted.includes(employeeId)) {
         deleted.push(employeeId);
-        saveToStorage('deleted_employees', deleted);
+        setInLocalStorage('deletedEmployees_v1', deleted);
       }
-
-      const workDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      delete workDays[employeeId];
-      saveToStorage('workDays', workDays);
-
-      const payments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      delete payments[employeeId];
-      saveToStorage('payments', payments);
-
-      const leaveRecords = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      delete leaveRecords[employeeId];
-      saveToStorage('leaveRecords', leaveRecords);
-
-      const monthlyBankSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      delete monthlyBankSalaries[employeeId];
-      saveToStorage('monthlyBankSalaries', monthlyBankSalaries);
-
       return employeeId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['workDays'] });
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
-      queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
 }
@@ -239,62 +155,40 @@ export function useDeleteEmployee() {
 // WORK DAYS HOOKS
 // ============================================================================
 
-export function useGetWorkDays(employeeId: number, month: number, year: number) {
-  return useQuery<Record<string, WorkDay>>({
+// workDays stored as: { [employeeId]: { [date]: WorkDay } }
+type WorkDaysStore = Record<number, Record<string, WorkDay>>;
+
+export function useGetWorkDays(employeeId?: number, month?: number, year?: number) {
+  return useQuery<WorkDay[]>({
     queryKey: ['workDays', employeeId, month, year],
     queryFn: () => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      const employeeWorkDays = allWorkDays[employeeId] ?? {};
-      const filtered: Record<string, WorkDay> = {};
-      for (const [date, wd] of Object.entries(employeeWorkDays)) {
-        const d = new Date(date);
-        if (d.getMonth() + 1 === month && d.getFullYear() === year) {
-          filtered[date] = wd;
+      const store = getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
+      if (employeeId !== undefined) {
+        const empDays = store[employeeId] ?? {};
+        let days = Object.values(empDays);
+        if (month !== undefined && year !== undefined) {
+          const prefix = `${year}-${String(month).padStart(2, '0')}`;
+          days = days.filter((d) => d.date.startsWith(prefix));
         }
+        return days;
       }
-      return filtered;
+      // Return all
+      const all: WorkDay[] = [];
+      for (const empDays of Object.values(store)) {
+        all.push(...Object.values(empDays));
+      }
+      return all;
     },
     staleTime: 0,
     refetchOnMount: true,
   });
 }
 
-/**
- * Returns all work days for a given month/year, keyed by employeeId.
- * Each value is an array of WorkDay objects for that employee.
- */
-export function useGetAllWorkDaysForMonth(month: number, year: number, employeeIds: number[]) {
-  return useQuery<Record<number, WorkDay[]>>({
-    queryKey: ['workDays', 'all', month, year, employeeIds],
+export function useGetAllWorkDays() {
+  return useQuery<WorkDaysStore>({
+    queryKey: ['workDays', 'all'],
     queryFn: () => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      const result: Record<number, WorkDay[]> = {};
-      for (const empId of employeeIds) {
-        const empDays = allWorkDays[empId] ?? {};
-        result[empId] = Object.values(empDays).filter((wd) => {
-          const d = new Date(wd.date);
-          return d.getMonth() + 1 === month && d.getFullYear() === year;
-        });
-      }
-      return result;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-}
-
-export function useGetDailyWorkEntries(date: string) {
-  return useQuery<Record<number, WorkDay>>({
-    queryKey: ['workDays', 'daily', date],
-    queryFn: () => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      const result: Record<number, WorkDay> = {};
-      for (const [empId, days] of Object.entries(allWorkDays)) {
-        if (days[date]) {
-          result[Number(empId)] = days[date];
-        }
-      }
-      return result;
+      return getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -305,23 +199,16 @@ export function useSetWorkDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, workDay }: { employeeId: number; workDay: WorkDay }) => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      if (!allWorkDays[employeeId]) allWorkDays[employeeId] = {};
-      allWorkDays[employeeId][workDay.date] = workDay;
-      saveToStorage('workDays', allWorkDays);
-      return { employeeId, workDay };
+    mutationFn: async (data: { employeeId: number; workDay: WorkDay }) => {
+      const store = getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
+      if (!store[data.employeeId]) store[data.employeeId] = {};
+      store[data.employeeId][data.workDay.date] = data.workDay;
+      setInLocalStorage(LS_KEYS.workDays, store);
+      return data;
     },
-    onSuccess: ({ employeeId, workDay }) => {
-      const date = new Date(workDay.date);
-      const month = date.getMonth() + 1;
-      const year = date.getFullYear();
-      queryClient.invalidateQueries({ queryKey: ['workDays', employeeId] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', 'daily', workDay.date] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', employeeId, month, year] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', 'all', month, year] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
     },
   });
 }
@@ -331,34 +218,17 @@ export function useSetWorkDaysBulk() {
 
   return useMutation({
     mutationFn: async (entries: { employeeId: number; workDay: WorkDay }[]) => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      for (const { employeeId, workDay } of entries) {
-        if (!allWorkDays[employeeId]) allWorkDays[employeeId] = {};
-        allWorkDays[employeeId][workDay.date] = workDay;
+      const store = getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
+      for (const entry of entries) {
+        if (!store[entry.employeeId]) store[entry.employeeId] = {};
+        store[entry.employeeId][entry.workDay.date] = entry.workDay;
       }
-      saveToStorage('workDays', allWorkDays);
+      setInLocalStorage(LS_KEYS.workDays, store);
       return entries;
     },
-    onSuccess: (entries) => {
-      const affectedDates = new Set<string>();
-      const affectedMonthYears = new Set<string>();
-      for (const { employeeId, workDay } of entries) {
-        const date = new Date(workDay.date);
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
-        affectedDates.add(workDay.date);
-        affectedMonthYears.add(`${month}-${year}`);
-        queryClient.invalidateQueries({ queryKey: ['workDays', employeeId] });
-      }
-      for (const dateStr of affectedDates) {
-        queryClient.invalidateQueries({ queryKey: ['workDays', 'daily', dateStr] });
-      }
-      for (const my of affectedMonthYears) {
-        const [m, y] = my.split('-').map(Number);
-        queryClient.invalidateQueries({ queryKey: ['workDays', 'all', m, y] });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
     },
   });
 }
@@ -367,69 +237,36 @@ export function useDeleteWorkDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, date }: { employeeId: number; date: string }) => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      if (allWorkDays[employeeId]) {
-        delete allWorkDays[employeeId][date];
-        saveToStorage('workDays', allWorkDays);
+    mutationFn: async (data: { employeeId: number; date: string }) => {
+      const store = getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
+      if (store[data.employeeId]) {
+        delete store[data.employeeId][data.date];
+        setInLocalStorage(LS_KEYS.workDays, store);
       }
-      return { employeeId, date };
+      return data;
     },
-    onSuccess: ({ employeeId, date }) => {
-      const d = new Date(date);
-      const month = d.getMonth() + 1;
-      const year = d.getFullYear();
-      queryClient.invalidateQueries({ queryKey: ['workDays', employeeId] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', 'daily', date] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', employeeId, month, year] });
-      queryClient.invalidateQueries({ queryKey: ['workDays', 'all', month, year] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
 }
 
 // ============================================================================
-// PAYMENT HOOKS
+// PAYMENTS HOOKS
 // ============================================================================
 
-export function useGetPayments(month: number, year: number, employeeId?: number) {
+// payments stored as: PaymentRecord[]
+export function useGetPayments(employeeId?: number, month?: number, year?: number) {
   return useQuery<PaymentRecord[]>({
-    queryKey: ['payments', month, year, employeeId],
+    queryKey: ['payments', employeeId, month, year],
     queryFn: () => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      const result: PaymentRecord[] = [];
-      if (employeeId !== undefined) {
-        const empPayments = allPayments[employeeId] ?? [];
-        return empPayments.filter((p) => p.month === month && p.year === year);
-      }
-      for (const empPayments of Object.values(allPayments)) {
-        for (const p of empPayments) {
-          if (p.month === month && p.year === year) {
-            result.push(p);
-          }
-        }
-      }
-      return result;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-}
-
-export function useGetAllPayments(month: number, year: number) {
-  return useQuery<PaymentRecord[]>({
-    queryKey: ['payments', 'all', month, year],
-    queryFn: () => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      const result: PaymentRecord[] = [];
-      for (const empPayments of Object.values(allPayments)) {
-        for (const p of empPayments) {
-          if (p.month === month && p.year === year) {
-            result.push(p);
-          }
-        }
-      }
-      return result;
+      const all = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      let filtered = all;
+      if (employeeId !== undefined) filtered = filtered.filter((p) => p.employeeId === employeeId);
+      if (month !== undefined) filtered = filtered.filter((p) => p.month === month);
+      if (year !== undefined) filtered = filtered.filter((p) => p.year === year);
+      return filtered;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -440,16 +277,11 @@ export function useAddPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payment: Omit<PaymentRecord, 'id'>) => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      if (!allPayments[payment.employeeId]) allPayments[payment.employeeId] = [];
-      const newPayment: PaymentRecord = {
-        ...payment,
-        id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      };
-      allPayments[payment.employeeId].push(newPayment);
-      saveToStorage('payments', allPayments);
-      return newPayment;
+    mutationFn: async (payment: PaymentRecord) => {
+      const all = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      all.push(payment);
+      setInLocalStorage(LS_KEYS.payments, all);
+      return payment;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -462,20 +294,19 @@ export function useAddPaymentsBulk() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ entries }: { entries: Omit<PaymentRecord, 'id'>[] }) => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      const newPayments: PaymentRecord[] = [];
-      for (const payment of entries) {
-        if (!allPayments[payment.employeeId]) allPayments[payment.employeeId] = [];
-        const newPayment: PaymentRecord = {
-          ...payment,
-          id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        };
-        allPayments[payment.employeeId].push(newPayment);
-        newPayments.push(newPayment);
-      }
-      saveToStorage('payments', allPayments);
-      return newPayments;
+    mutationFn: async ({ entries }: { entries: PaymentRecord[] }) => {
+      const all = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      // Replace existing entries for same employee/month/year
+      const newEntries = entries.filter((e) => e.cashPayment > 0 || e.bankPayment > 0);
+      const filtered = all.filter(
+        (p) =>
+          !newEntries.some(
+            (e) => e.employeeId === p.employeeId && e.month === p.month && e.year === p.year,
+          ),
+      );
+      filtered.push(...newEntries);
+      setInLocalStorage(LS_KEYS.payments, filtered);
+      return entries;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -488,15 +319,13 @@ export function useUpdatePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payment: PaymentRecord) => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      if (allPayments[payment.employeeId]) {
-        allPayments[payment.employeeId] = allPayments[payment.employeeId].map((p) =>
-          p.id === payment.id ? payment : p
-        );
-        saveToStorage('payments', allPayments);
+    mutationFn: async (data: { index: number; payment: PaymentRecord }) => {
+      const all = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      if (data.index >= 0 && data.index < all.length) {
+        all[data.index] = data.payment;
+        setInLocalStorage(LS_KEYS.payments, all);
       }
-      return payment;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -509,13 +338,11 @@ export function useDeletePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, paymentId }: { employeeId: number; paymentId: string }) => {
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      if (allPayments[employeeId]) {
-        allPayments[employeeId] = allPayments[employeeId].filter((p) => p.id !== paymentId);
-        saveToStorage('payments', allPayments);
-      }
-      return { employeeId, paymentId };
+    mutationFn: async (index: number) => {
+      const all = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      all.splice(index, 1);
+      setInLocalStorage(LS_KEYS.payments, all);
+      return index;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -525,43 +352,19 @@ export function useDeletePayment() {
 }
 
 // ============================================================================
-// MONTHLY BANK SALARY HOOKS
+// MONTHLY BANK SALARIES HOOKS
 // ============================================================================
 
-export function useGetMonthlyBankSalaries(month: number, year: number) {
+export function useGetMonthlyBankSalaries(employeeId?: number, month?: number, year?: number) {
   return useQuery<MonthlyBankSalary[]>({
-    queryKey: ['monthlyBankSalaries', month, year],
+    queryKey: ['monthlyBankSalaries', employeeId, month, year],
     queryFn: () => {
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      const result: MonthlyBankSalary[] = [];
-      for (const empSalaries of Object.values(allSalaries)) {
-        for (const s of empSalaries) {
-          if (s.month === month && s.year === year) {
-            result.push(s);
-          }
-        }
-      }
-      return result;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-}
-
-export function useGetAllMonthlyBankSalaries(month: number, year: number) {
-  return useQuery<MonthlyBankSalary[]>({
-    queryKey: ['monthlyBankSalaries', 'all', month, year],
-    queryFn: () => {
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      const result: MonthlyBankSalary[] = [];
-      for (const empSalaries of Object.values(allSalaries)) {
-        for (const s of empSalaries) {
-          if (s.month === month && s.year === year) {
-            result.push(s);
-          }
-        }
-      }
-      return result;
+      const all = getFromLocalStorage<MonthlyBankSalary[]>(LS_KEYS.monthlyBankSalaries, []);
+      let filtered = all;
+      if (employeeId !== undefined) filtered = filtered.filter((s) => s.employeeId === employeeId);
+      if (month !== undefined) filtered = filtered.filter((s) => s.month === month);
+      if (year !== undefined) filtered = filtered.filter((s) => s.year === year);
+      return filtered;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -572,27 +375,19 @@ export function useSetMonthlyBankSalary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (salary: Omit<MonthlyBankSalary, 'id'>) => {
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      if (!allSalaries[salary.employeeId]) allSalaries[salary.employeeId] = [];
-
-      const existingIdx = allSalaries[salary.employeeId].findIndex(
-        (s) => s.month === salary.month && s.year === salary.year
+    mutationFn: async (data: { employeeId: number; month: number; year: number; amount: number }) => {
+      const all = getFromLocalStorage<MonthlyBankSalary[]>(LS_KEYS.monthlyBankSalaries, []);
+      const existing = all.findIndex(
+        (s) => s.employeeId === data.employeeId && s.month === data.month && s.year === data.year,
       );
-
-      let nextId = getFromStorage<number>('nextBankSalaryId', 1);
-      if (existingIdx >= 0) {
-        allSalaries[salary.employeeId][existingIdx] = {
-          ...salary,
-          id: allSalaries[salary.employeeId][existingIdx].id,
-        };
+      if (existing >= 0) {
+        all[existing] = { ...all[existing], amount: data.amount };
       } else {
-        allSalaries[salary.employeeId].push({ ...salary, id: nextId });
-        nextId++;
-        saveToStorage('nextBankSalaryId', nextId);
+        const maxId = all.reduce((max, s) => Math.max(max, s.id), 0);
+        all.push({ id: maxId + 1, ...data });
       }
-      saveToStorage('monthlyBankSalaries', allSalaries);
-      return salary;
+      setInLocalStorage(LS_KEYS.monthlyBankSalaries, all);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
@@ -605,27 +400,21 @@ export function useSetMonthlyBankSalariesBulk() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (entries: Omit<MonthlyBankSalary, 'id'>[]) => {
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      let nextId = getFromStorage<number>('nextBankSalaryId', 1);
-
-      for (const salary of entries) {
-        if (!allSalaries[salary.employeeId]) allSalaries[salary.employeeId] = [];
-        const existingIdx = allSalaries[salary.employeeId].findIndex(
-          (s) => s.month === salary.month && s.year === salary.year
+    mutationFn: async (entries: { employeeId: number; month: number; year: number; amount: number }[]) => {
+      const all = getFromLocalStorage<MonthlyBankSalary[]>(LS_KEYS.monthlyBankSalaries, []);
+      let maxId = all.reduce((max, s) => Math.max(max, s.id), 0);
+      for (const entry of entries) {
+        const existing = all.findIndex(
+          (s) => s.employeeId === entry.employeeId && s.month === entry.month && s.year === entry.year,
         );
-        if (existingIdx >= 0) {
-          allSalaries[salary.employeeId][existingIdx] = {
-            ...salary,
-            id: allSalaries[salary.employeeId][existingIdx].id,
-          };
+        if (existing >= 0) {
+          all[existing] = { ...all[existing], amount: entry.amount };
         } else {
-          allSalaries[salary.employeeId].push({ ...salary, id: nextId });
-          nextId++;
+          maxId += 1;
+          all.push({ id: maxId, ...entry });
         }
       }
-      saveToStorage('nextBankSalaryId', nextId);
-      saveToStorage('monthlyBankSalaries', allSalaries);
+      setInLocalStorage(LS_KEYS.monthlyBankSalaries, all);
       return entries;
     },
     onSuccess: () => {
@@ -639,13 +428,14 @@ export function useDeleteMonthlyBankSalary() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, id }: { employeeId: number; id: number }) => {
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
-      if (allSalaries[employeeId]) {
-        allSalaries[employeeId] = allSalaries[employeeId].filter((s) => s.id !== id);
-        saveToStorage('monthlyBankSalaries', allSalaries);
+    mutationFn: async (salary: MonthlyBankSalary) => {
+      const all = getFromLocalStorage<MonthlyBankSalary[]>(LS_KEYS.monthlyBankSalaries, []);
+      const idx = all.findIndex((s) => s.id === salary.id);
+      if (idx >= 0) {
+        all.splice(idx, 1);
+        setInLocalStorage(LS_KEYS.monthlyBankSalaries, all);
       }
-      return { employeeId, id };
+      return salary;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['monthlyBankSalaries'] });
@@ -655,43 +445,16 @@ export function useDeleteMonthlyBankSalary() {
 }
 
 // ============================================================================
-// LEAVE RECORD HOOKS
+// LEAVE DAYS HOOKS
 // ============================================================================
 
-export function useGetLeaveRecords() {
-  return useQuery<LeaveRecord[]>({
-    queryKey: ['leaveRecords'],
-    queryFn: () => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      return Object.values(records);
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-}
-
-export function useGetLeaveRecord(employeeId: number) {
-  return useQuery<LeaveRecord | null>({
-    queryKey: ['leaveRecords', employeeId],
-    queryFn: () => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      return records[employeeId] ?? null;
-    },
-    staleTime: 0,
-    refetchOnMount: true,
-  });
-}
-
-/**
- * Returns the leave days array for a specific employee.
- * Alias for useGetLeaveRecord that returns just the leaveDays array.
- */
-export function useGetLeaveDays(employeeId: number) {
+export function useGetLeaveDays(employeeId?: number) {
   return useQuery<LeaveDay[]>({
-    queryKey: ['leaveRecords', employeeId, 'days'],
+    queryKey: ['leaveDays', employeeId],
     queryFn: () => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      return records[employeeId]?.leaveDays ?? [];
+      const all = getFromLocalStorage<LeaveDay[]>(LS_KEYS.leaveDays, []);
+      if (employeeId !== undefined) return all.filter((l) => l.employeeId === employeeId);
+      return all;
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -702,34 +465,21 @@ export function useToggleLeaveDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, date }: { employeeId: number; date: string }) => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      if (!records[employeeId]) {
-        records[employeeId] = {
-          employeeId,
-          totalAnnualLeaveDays: 0,
-          leaveDaysUsed: 0,
-          remainingLeaveDays: 0,
-          leaveDays: [],
-        };
-      }
-      const record = records[employeeId];
-      const existingIdx = record.leaveDays.findIndex((ld) => ld.date === date);
-      if (existingIdx >= 0) {
-        record.leaveDays.splice(existingIdx, 1);
-        record.leaveDaysUsed = Math.max(0, record.leaveDaysUsed - 1);
+    mutationFn: async (data: { employeeId: number; date: string; leaveType?: string }) => {
+      const all = getFromLocalStorage<LeaveDay[]>(LS_KEYS.leaveDays, []);
+      const existing = all.findIndex(
+        (l) => l.employeeId === data.employeeId && l.date === data.date,
+      );
+      if (existing >= 0) {
+        all.splice(existing, 1);
       } else {
-        record.leaveDays.push({ id: `leave-${Date.now()}`, date });
-        record.leaveDaysUsed += 1;
+        all.push({ employeeId: data.employeeId, date: data.date, leaveType: data.leaveType });
       }
-      record.remainingLeaveDays = Math.max(0, record.totalAnnualLeaveDays - record.leaveDaysUsed);
-      records[employeeId] = record;
-      saveToStorage('leaveRecords', records);
-      return { employeeId, date };
+      setInLocalStorage(LS_KEYS.leaveDays, all);
+      return data;
     },
-    onSuccess: ({ employeeId }) => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords', employeeId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaveDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
@@ -739,32 +489,19 @@ export function useAddBulkLeaveDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ date, employeeIds }: { date: string; employeeIds: number[] }) => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      for (const employeeId of employeeIds) {
-        if (!records[employeeId]) {
-          records[employeeId] = {
-            employeeId,
-            totalAnnualLeaveDays: 0,
-            leaveDaysUsed: 0,
-            remainingLeaveDays: 0,
-            leaveDays: [],
-          };
+    mutationFn: async (data: { date: string; employeeIds: number[]; leaveType?: string }) => {
+      const all = getFromLocalStorage<LeaveDay[]>(LS_KEYS.leaveDays, []);
+      for (const empId of data.employeeIds) {
+        const existing = all.findIndex((l) => l.employeeId === empId && l.date === data.date);
+        if (existing < 0) {
+          all.push({ employeeId: empId, date: data.date, leaveType: data.leaveType });
         }
-        const record = records[employeeId];
-        const exists = record.leaveDays.some((ld) => ld.date === date);
-        if (!exists) {
-          record.leaveDays.push({ id: `leave-${Date.now()}-${employeeId}`, date });
-          record.leaveDaysUsed += 1;
-          record.remainingLeaveDays = Math.max(0, record.totalAnnualLeaveDays - record.leaveDaysUsed);
-        }
-        records[employeeId] = record;
       }
-      saveToStorage('leaveRecords', records);
-      return { date, employeeIds };
+      setInLocalStorage(LS_KEYS.leaveDays, all);
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['leaveDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
@@ -774,108 +511,107 @@ export function useDeleteLeaveDay() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ employeeId, leaveDayId }: { employeeId: number; leaveDayId: string }) => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      if (records[employeeId]) {
-        const record = records[employeeId];
-        const existingIdx = record.leaveDays.findIndex((ld) => ld.id === leaveDayId);
-        if (existingIdx >= 0) {
-          record.leaveDays.splice(existingIdx, 1);
-          record.leaveDaysUsed = Math.max(0, record.leaveDaysUsed - 1);
-          record.remainingLeaveDays = Math.max(0, record.totalAnnualLeaveDays - record.leaveDaysUsed);
-        }
-        records[employeeId] = record;
-        saveToStorage('leaveRecords', records);
+    mutationFn: async (data: { employeeId: number; date: string }) => {
+      const all = getFromLocalStorage<LeaveDay[]>(LS_KEYS.leaveDays, []);
+      const idx = all.findIndex((l) => l.employeeId === data.employeeId && l.date === data.date);
+      if (idx >= 0) {
+        all.splice(idx, 1);
+        setInLocalStorage(LS_KEYS.leaveDays, all);
       }
-      return { employeeId, leaveDayId };
+      return data;
     },
-    onSuccess: ({ employeeId }) => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords', employeeId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaveDays'] });
       queryClient.invalidateQueries({ queryKey: ['payroll'] });
     },
   });
 }
 
-export function useUpdateLeaveRecord() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (record: LeaveRecord) => {
-      const records = getFromStorage<Record<number, LeaveRecord>>('leaveRecords', {});
-      records[record.employeeId] = record;
-      saveToStorage('leaveRecords', records);
-      return record;
-    },
-    onSuccess: (record) => {
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords'] });
-      queryClient.invalidateQueries({ queryKey: ['leaveRecords', record.employeeId] });
-    },
-  });
-}
-
 // ============================================================================
-// PAYROLL HOOKS
+// PAYROLL CALCULATION HOOKS
 // ============================================================================
 
-export function useGetPayroll(month: number, year: number, employees: Employee[]) {
+export function useGetAllPayrollData(month: number, year: number) {
+  const { data: employees = [] } = useGetEmployees();
+
   return useQuery<PayrollData[]>({
-    queryKey: ['payroll', month, year, employees.map((e) => Number(e.id))],
+    queryKey: ['payroll', month, year, employees.map((e) => e.id).join(',')],
     queryFn: () => {
-      const allWorkDays = getFromStorage<Record<number, Record<string, WorkDay>>>('workDays', {});
-      const allPayments = getFromStorage<Record<number, PaymentRecord[]>>('payments', {});
-      const allSalaries = getFromStorage<Record<number, MonthlyBankSalary[]>>('monthlyBankSalaries', {});
+      const workDaysStore = getFromLocalStorage<WorkDaysStore>(LS_KEYS.workDays, {});
+      const allPayments = getFromLocalStorage<PaymentRecord[]>(LS_KEYS.payments, []);
+      const allBankSalaries = getFromLocalStorage<MonthlyBankSalary[]>(LS_KEYS.monthlyBankSalaries, []);
 
-      const results: PayrollData[] = [];
+      const monthPrefix = `${year}-${String(month).padStart(2, '0')}`;
 
-      for (const employee of employees) {
-        const empId = Number(employee.id);
+      return employees.map((emp) => {
+        // Work days for this month
+        const empWorkDays = workDaysStore[emp.id] ?? {};
+        const monthWorkDays = Object.values(empWorkDays).filter((d) => d.date.startsWith(monthPrefix));
 
-        // Get work days for this month/year
-        const empWorkDays = allWorkDays[empId] ?? {};
-        let normalHours = 0;
-        let overtimeHours = 0;
-        let leaveDaysCount = 0;
+        const normalHours = monthWorkDays.reduce((sum, d) => sum + d.normalHours, 0);
+        const overtimeHours = monthWorkDays.reduce((sum, d) => sum + d.overtimeHours, 0);
+        const leaveDays = monthWorkDays.filter((d) => d.isLeave).length;
 
-        for (const [date, wd] of Object.entries(empWorkDays)) {
-          const d = new Date(date);
-          if (d.getMonth() + 1 === month && d.getFullYear() === year) {
-            if (wd.isLeave) {
-              leaveDaysCount += 1;
-            } else {
-              normalHours += wd.normalHours;
-              overtimeHours += wd.overtimeHours;
-            }
-          }
-        }
-
-        // Get payments for this month/year
-        const empPayments = (allPayments[empId] ?? []).filter(
-          (p) => p.month === month && p.year === year
-        );
-        const totalCashPayments = empPayments.reduce((sum, p) => sum + p.cashPayment, 0);
-        const totalBankPayments = empPayments.reduce((sum, p) => sum + p.bankPayment, 0);
-
-        // Get monthly bank salary
-        const empSalaries = allSalaries[empId] ?? [];
-        const monthlyBankSalary = empSalaries.find((s) => s.month === month && s.year === year);
-        const monthlyBankFixedSalary = monthlyBankSalary?.amount;
-
-        // Calculate total salary
+        // Calculate total monthly salary
         let totalMonthlySalary = 0;
-        if (employee.employeeType === 'monthly') {
-          totalMonthlySalary = employee.fixedMonthlySalary ?? 0;
+        if (emp.employeeType === 'monthly' && emp.fixedMonthlySalary) {
+          totalMonthlySalary = emp.fixedMonthlySalary + overtimeHours * emp.overtimeRate;
         } else {
-          totalMonthlySalary =
-            normalHours * employee.hourlyRate + overtimeHours * employee.overtimeRate;
+          totalMonthlySalary = normalHours * emp.hourlyRate + overtimeHours * emp.overtimeRate;
         }
 
+        // Monthly bank fixed salary for this month
+        const bankSalaryEntry = allBankSalaries.find(
+          (s) => s.employeeId === emp.id && s.month === month && s.year === year,
+        );
+        const monthlyBankFixedSalary = bankSalaryEntry?.amount;
+
+        // Payments for this month
+        const monthPayments = allPayments.filter(
+          (p) => p.employeeId === emp.id && p.month === month && p.year === year,
+        );
+        const totalCashPayments = monthPayments.reduce((sum, p) => sum + p.cashPayment, 0);
+        const totalBankPayments = monthPayments.reduce((sum, p) => sum + p.bankPayment, 0);
+
+        // Previous month carryover
+        let prevMonth = month - 1;
+        let prevYear = year;
+        if (prevMonth === 0) {
+          prevMonth = 12;
+          prevYear = year - 1;
+        }
+        const prevMonthPrefix = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+        const prevWorkDays = Object.values(empWorkDays).filter((d) => d.date.startsWith(prevMonthPrefix));
+        const prevNormalHours = prevWorkDays.reduce((sum, d) => sum + d.normalHours, 0);
+        const prevOvertimeHours = prevWorkDays.reduce((sum, d) => sum + d.overtimeHours, 0);
+
+        let prevTotalSalary = 0;
+        if (emp.employeeType === 'monthly' && emp.fixedMonthlySalary) {
+          prevTotalSalary = emp.fixedMonthlySalary + prevOvertimeHours * emp.overtimeRate;
+        } else {
+          prevTotalSalary = prevNormalHours * emp.hourlyRate + prevOvertimeHours * emp.overtimeRate;
+        }
+
+        const prevPayments = allPayments.filter(
+          (p) => p.employeeId === emp.id && p.month === prevMonth && p.year === prevYear,
+        );
+        const prevCash = prevPayments.reduce((sum, p) => sum + p.cashPayment, 0);
+        const prevBank = prevPayments.reduce((sum, p) => sum + p.bankPayment, 0);
+        const prevBankSalary = allBankSalaries.find(
+          (s) => s.employeeId === emp.id && s.month === prevMonth && s.year === prevYear,
+        );
+        const prevBankFixed = prevBankSalary?.amount ?? 0;
+
+        const previousMonthSalaryCarryover = Math.max(0, prevTotalSalary - prevCash - prevBank);
+        const previousMonthBankCarryover = Math.max(0, prevBankFixed - prevBank);
+
+        // Remaining balances
         const remainingRealSalary = totalMonthlySalary - totalCashPayments - totalBankPayments;
         const remainingBankBalance = (monthlyBankFixedSalary ?? 0) - totalBankPayments;
 
-        results.push({
-          employeeId: empId,
-          employeeName: employee.fullName,
+        return {
+          employeeId: emp.id,
+          employeeName: emp.fullName,
           month,
           year,
           totalMonthlySalary,
@@ -884,36 +620,72 @@ export function useGetPayroll(month: number, year: number, employees: Employee[]
           totalBankPayments,
           remainingRealSalary,
           remainingBankBalance,
-          previousMonthSalaryCarryover: 0,
-          previousMonthBankCarryover: 0,
+          previousMonthSalaryCarryover,
+          previousMonthBankCarryover,
           normalHours,
           overtimeHours,
-          leaveDays: leaveDaysCount,
-          employeeType: employee.employeeType,
-        });
-      }
-
-      return results;
+          leaveDays,
+          employeeType: emp.employeeType,
+        } as PayrollData;
+      });
     },
-    enabled: employees.length > 0,
+    enabled: employees.length >= 0,
     staleTime: 0,
     refetchOnMount: true,
   });
 }
 
-// Alias for backward compatibility
-export const useGetPayrollData = useGetPayroll;
+// ============================================================================
+// USER PROFILE HOOKS
+// ============================================================================
+
+export function useGetCallerUserProfile() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const query = useQuery({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !actorFetching,
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
+}
+
+export function useSaveCallerUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: { name: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
 
 // ============================================================================
 // CHANGE HISTORY HOOKS
 // ============================================================================
 
 export function useGetChangeHistory(employeeId: number) {
-  return useQuery<ChangeHistoryEntry[]>({
+  return useQuery({
     queryKey: ['changeHistory', employeeId],
     queryFn: () => {
-      const histories = getFromStorage<Record<number, ChangeHistoryEntry[]>>('changeHistories', {});
-      return histories[employeeId] ?? [];
+      const key = `changeHistory_${employeeId}`;
+      return getFromLocalStorage<{ date: string; changeType: string; description: string }[]>(key, []);
     },
     staleTime: 0,
     refetchOnMount: true,
@@ -924,21 +696,18 @@ export function useAddChangeHistory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      employeeId,
-      entry,
-    }: {
+    mutationFn: async (data: {
       employeeId: number;
-      entry: ChangeHistoryEntry;
+      entry: { date: string; changeType: string; description: string };
     }) => {
-      const histories = getFromStorage<Record<number, ChangeHistoryEntry[]>>('changeHistories', {});
-      if (!histories[employeeId]) histories[employeeId] = [];
-      histories[employeeId].unshift(entry);
-      saveToStorage('changeHistories', histories);
-      return { employeeId, entry };
+      const key = `changeHistory_${data.employeeId}`;
+      const history = getFromLocalStorage<{ date: string; changeType: string; description: string }[]>(key, []);
+      history.unshift(data.entry);
+      setInLocalStorage(key, history);
+      return data;
     },
-    onSuccess: ({ employeeId }) => {
-      queryClient.invalidateQueries({ queryKey: ['changeHistory', employeeId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['changeHistory', variables.employeeId] });
     },
   });
 }

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useGetEmployees, useAddBulkLeaveDay } from '../hooks/useQueries';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { useAddBulkLeaveDay, useGetEmployees } from '../hooks/useQueries';
 import { toast } from 'sonner';
 
 interface BulkLeaveDayDialogProps {
@@ -19,17 +17,15 @@ interface BulkLeaveDayDialogProps {
 }
 
 export default function BulkLeaveDayDialog({ open, onClose }: BulkLeaveDayDialogProps) {
-  const addBulkLeaveDay = useAddBulkLeaveDay();
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const { data: employees = [] } = useGetEmployees();
-  const [date, setDate] = useState('');
+  const addBulkLeaveDay = useAddBulkLeaveDay();
 
-  const handleSubmit = async () => {
-    if (!date) return;
-
+  const handleSave = async () => {
     try {
-      const employeeIds = employees.map((e) => Number(e.id));
+      const employeeIds = employees.map((e) => e.id);
       await addBulkLeaveDay.mutateAsync({ date, employeeIds });
-      toast.success('Η μαζική άδεια καταχωρήθηκε');
+      toast.success(`Η άδεια καταχωρήθηκε για όλους τους εργαζόμενους`);
       onClose();
     } catch {
       toast.error('Σφάλμα κατά την καταχώρηση');
@@ -38,36 +34,30 @@ export default function BulkLeaveDayDialog({ open, onClose }: BulkLeaveDayDialog
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Μαζική Καταχώρηση Άδειας</DialogTitle>
         </DialogHeader>
-
         <div className="space-y-4 py-2">
           <p className="text-sm text-muted-foreground">
-            Καταχώρηση άδειας για όλους τους εργαζόμενους ({employees.length}) την ίδια ημέρα.
+            Η άδεια θα καταχωρηθεί για όλους τους εργαζόμενους ({employees.length} άτομα).
           </p>
-          <div className="space-y-1.5">
-            <Label htmlFor="bulkLeaveDate">Ημερομηνία</Label>
-            <Input
-              id="bulkLeaveDate"
+          <div className="space-y-2">
+            <Label>Ημερομηνία Άδειας</Label>
+            <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className="w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         </div>
-
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Ακύρωση
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={addBulkLeaveDay.isPending || !date}
-          >
-            {addBulkLeaveDay.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Καταχώρηση
+          <Button onClick={handleSave} disabled={addBulkLeaveDay.isPending}>
+            {addBulkLeaveDay.isPending ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </Button>
         </DialogFooter>
       </DialogContent>

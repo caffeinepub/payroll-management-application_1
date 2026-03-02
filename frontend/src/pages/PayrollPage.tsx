@@ -1,177 +1,239 @@
-import { useState } from 'react';
-import { Loader2, TrendingUp, Clock, Umbrella, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { useGetEmployees, useGetAllPayrollData } from '../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useEmployees, useGetPayrollData } from '../hooks/useQueries';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DollarSign, Clock, TrendingUp, CreditCard, Building2, AlertCircle } from 'lucide-react';
 
 const MONTHS = [
-  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
-  'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
+  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
+  'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
+  'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
 ];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export default function PayrollPage() {
   const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
-  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
-
-  const { data: employees = [], isLoading: empLoading } = useEmployees();
-  const { data: payrollData = [], isLoading: payrollLoading } = useGetPayrollData(month, year, employees);
+  const { data: employees = [], isLoading: empLoading } = useGetEmployees();
+  const { data: payrollData = [], isLoading: payrollLoading } = useGetAllPayrollData(selectedMonth, selectedYear);
 
   const isLoading = empLoading || payrollLoading;
 
-  const totalSalary = payrollData.reduce((sum, p) => sum + p.totalMonthlySalary, 0);
+  const totalSalaries = payrollData.reduce((sum, p) => sum + p.totalMonthlySalary, 0);
   const totalCash = payrollData.reduce((sum, p) => sum + p.totalCashPayments, 0);
   const totalBank = payrollData.reduce((sum, p) => sum + p.totalBankPayments, 0);
+  const totalRemaining = payrollData.reduce((sum, p) => sum + Math.max(0, p.remainingRealSalary), 0);
+
+  const fmt = (n: number) =>
+    n.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Μισθοδοσία</h1>
-        <p className="text-muted-foreground text-sm mt-1">Μηνιαία σύνοψη μισθοδοσίας ανά εργαζόμενο</p>
-      </div>
-
-      {/* Month/Year Selectors */}
-      <div className="flex gap-3 flex-wrap">
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-        >
-          {MONTHS.map((m, i) => (
-            <option key={i + 1} value={i + 1}>{m}</option>
-          ))}
-        </select>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Μισθοδοσία</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Υπολογισμός μισθοδοσίας εργαζομένων
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={String(selectedMonth)}
+            onValueChange={(v) => setSelectedMonth(Number(v))}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i + 1} value={String(i + 1)}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(selectedYear)}
+            onValueChange={(v) => setSelectedYear(Number(v))}
+          >
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      {!isLoading && payrollData.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <DollarSign className="w-4 h-4" />
-                Συνολικός Μισθός
-              </div>
-              <div className="text-2xl font-bold text-foreground">{totalSalary.toFixed(2)}€</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <DollarSign className="w-4 h-4" />
-                Πληρωμές Μετρητά
-              </div>
-              <div className="text-2xl font-bold text-foreground">{totalCash.toFixed(2)}€</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
-                <DollarSign className="w-4 h-4" />
-                Πληρωμές Τράπεζα
-              </div>
-              <div className="text-2xl font-bold text-foreground">{totalBank.toFixed(2)}€</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="w-4 h-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Σύνολο Μισθών</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">{fmt(totalSalaries)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="w-4 h-4 text-green-600" />
+              <span className="text-xs text-muted-foreground">Πληρωμές Μετρητά</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">{fmt(totalCash)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span className="text-xs text-muted-foreground">Πληρωμές Τράπεζα</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">{fmt(totalBank)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertCircle className="w-4 h-4 text-orange-500" />
+              <span className="text-xs text-muted-foreground">Υπόλοιπο</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">{fmt(totalRemaining)}</p>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Loading */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Φόρτωση...</span>
-        </div>
-      )}
-
-      {/* Employee Cards */}
-      {!isLoading && payrollData.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          Δεν υπάρχουν δεδομένα μισθοδοσίας για αυτόν τον μήνα.
-        </div>
-      )}
-
-      {!isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {payrollData.map((p) => (
-            <Card key={p.employeeId} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span className="truncate">{p.employeeName}</span>
-                  <Badge variant={p.employeeType === 'monthly' ? 'default' : 'secondary'} className="text-xs ml-2 shrink-0">
-                    {p.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωρομίσθιος'}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    Μισθός μήνα:
-                  </span>
-                  <span className="font-semibold">{p.totalMonthlySalary.toFixed(2)}€</span>
+      {/* Employee Payroll Cards */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-4">
+                <Skeleton className="h-6 w-48 mb-3" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[1, 2, 3, 4].map((j) => (
+                    <Skeleton key={j} className="h-16" />
+                  ))}
                 </div>
-                {p.employeeType === 'hourly' && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Κανονικές ώρες:
-                      </span>
-                      <span>{p.normalHours.toFixed(1)}h</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        Υπερωρίες:
-                      </span>
-                      <span>{p.overtimeHours.toFixed(1)}h</span>
-                    </div>
-                  </>
-                )}
-                {p.monthlyBankFixedSalary != null && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Τράπεζα (σταθερό):</span>
-                    <span>{p.monthlyBankFixedSalary.toFixed(2)}€</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Πληρωμές μετρητά:</span>
-                  <span className="text-green-600 dark:text-green-400">{p.totalCashPayments.toFixed(2)}€</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Πληρωμές τράπεζα:</span>
-                  <span className="text-blue-600 dark:text-blue-400">{p.totalBankPayments.toFixed(2)}€</span>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2">
-                  <span className="text-muted-foreground font-medium">Υπόλοιπο:</span>
-                  <span className={`font-bold ${p.remainingRealSalary < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                    {p.remainingRealSalary.toFixed(2)}€
-                  </span>
-                </div>
-                {p.leaveDays > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Umbrella className="w-3 h-3" />
-                      Ημέρες άδειας:
-                    </span>
-                    <span>{p.leaveDays}</span>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : employees.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <DollarSign className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">Δεν υπάρχουν εργαζόμενοι</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {payrollData.map((pd) => {
+            const emp = employees.find((e) => e.id === pd.employeeId);
+            if (!emp) return null;
+            const remaining = pd.remainingRealSalary;
+            const bankRemaining = pd.remainingBankBalance;
+
+            return (
+              <Card key={pd.employeeId} className="overflow-hidden">
+                <CardHeader className="pb-3 pt-4 px-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold text-sm">
+                          {emp.fullName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <CardTitle className="text-base">{emp.fullName}</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          {emp.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωρομίσθιος'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={remaining <= 0 ? 'secondary' : 'default'}
+                      className={remaining <= 0 ? '' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}
+                    >
+                      {remaining <= 0 ? 'Εξοφλημένος' : `Υπόλοιπο: ${fmt(remaining)}`}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Μικτός Μισθός</p>
+                      <p className="font-semibold text-sm">{fmt(pd.totalMonthlySalary)}</p>
+                    </div>
+                    {pd.monthlyBankFixedSalary != null && (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground mb-1">Τράπεζα (Ορισμένο)</p>
+                        <p className="font-semibold text-sm text-blue-700 dark:text-blue-400">
+                          {fmt(pd.monthlyBankFixedSalary)}
+                        </p>
+                      </div>
+                    )}
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Ώρες Εργασίας</p>
+                      <p className="font-semibold text-sm">{pd.normalHours.toFixed(1)}h</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Υπερωρίες</p>
+                      <p className="font-semibold text-sm">{pd.overtimeHours.toFixed(1)}h</p>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Πληρωμές Μετρητά</p>
+                      <p className="font-semibold text-sm text-green-700 dark:text-green-400">
+                        {fmt(pd.totalCashPayments)}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Πληρωμές Τράπεζα</p>
+                      <p className="font-semibold text-sm text-blue-700 dark:text-blue-400">
+                        {fmt(pd.totalBankPayments)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Additional info row */}
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {pd.leaveDays > 0 && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+                        Άδειες: {pd.leaveDays} ημέρες
+                      </div>
+                    )}
+                    {pd.previousMonthSalaryCarryover > 0 && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />
+                        Υπόλοιπο προηγ. μήνα: {fmt(pd.previousMonthSalaryCarryover)}
+                      </div>
+                    )}
+                    {bankRemaining !== 0 && pd.monthlyBankFixedSalary != null && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                        Υπόλοιπο τράπεζας: {fmt(bankRemaining)}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

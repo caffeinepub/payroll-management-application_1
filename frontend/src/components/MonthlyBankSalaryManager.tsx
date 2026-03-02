@@ -1,73 +1,74 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import { Loader2, Save } from 'lucide-react';
-import { useSetMonthlyBankSalary, useGetMonthlyBankSalaries, useGetEmployees } from '../hooks/useQueries';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetMonthlyBankSalaries, useSetMonthlyBankSalary } from '../hooks/useQueries';
+import { Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MonthlyBankSalaryManagerProps {
   employeeId: number;
+  employeeName: string;
   month: number;
   year: number;
 }
 
 export default function MonthlyBankSalaryManager({
   employeeId,
+  employeeName,
   month,
   year,
 }: MonthlyBankSalaryManagerProps) {
-  const { data: employees = [] } = useGetEmployees();
-  const employee = employees.find((e) => Number(e.id) === employeeId);
-  const { data: allSalaries = [] } = useGetMonthlyBankSalaries(month, year);
-  const existing = allSalaries.find((s) => s.employeeId === employeeId);
+  const { data: salaries = [] } = useGetMonthlyBankSalaries(employeeId, month, year);
   const setMonthlyBankSalary = useSetMonthlyBankSalary();
 
+  const currentTotal = salaries.reduce((sum, s) => sum + s.amount, 0);
   const [amount, setAmount] = useState('');
 
   const handleSave = async () => {
+    const parsed = parseFloat(amount.replace(',', '.'));
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Εισάγετε έγκυρο ποσό');
+      return;
+    }
     try {
-      await setMonthlyBankSalary.mutateAsync({
-        employeeId,
-        month,
-        year,
-        amount: parseFloat(amount.replace(',', '.')) || 0,
-      });
-      toast.success('Αποθηκεύτηκε');
+      await setMonthlyBankSalary.mutateAsync({ employeeId, month, year, amount: parsed });
+      toast.success('Ο μισθός αποθηκεύτηκε');
       setAmount('');
     } catch {
       toast.error('Σφάλμα κατά την αποθήκευση');
     }
   };
 
-  if (!employee) return null;
-
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{employee.fullName}</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold">{employeeName}</CardTitle>
       </CardHeader>
-      <CardContent>
-        {existing && (
-          <p className="text-sm text-muted-foreground mb-2">
-            Τρέχον ποσό: <span className="font-medium text-foreground">{existing.amount.toFixed(2)}€</span>
-          </p>
+      <CardContent className="space-y-3">
+        {currentTotal > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Τρέχον σύνολο: <span className="font-semibold text-foreground">{currentTotal.toFixed(2)}€</span>
+          </div>
         )}
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2">
           <Input
+            type="text"
+            placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder={existing ? existing.amount.toFixed(2) : '0.00'}
             className="flex-1"
-            type="number"
-            step="0.01"
-            min="0"
           />
-          <Button onClick={handleSave} disabled={setMonthlyBankSalary.isPending} size="sm" className="gap-1">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={setMonthlyBankSalary.isPending}
+            className="gap-1"
+          >
             {setMonthlyBankSalary.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Save className="h-4 w-4" />
+              <Save className="h-3.5 w-3.5" />
             )}
             Αποθήκευση
           </Button>

@@ -1,73 +1,36 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T08:35:27.791Z",
+  "generatedAt": "2026-03-02T06:52:41.196Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
+    "total": 1,
     "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Implement a Motoko migration module (backend/migration.mo) that preserves and migrates existing stable state (employees, work days, payments, leave records, monthly bank salaries, and payroll records) from the previous actor version so that all data entered in earlier deployments (e.g., v227) remains accessible after upgrade.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Audit every state collection in backend/main.mo (employees, work days, payments, leave days, monthly bank salaries, payroll records) and ensure all are declared as `stable` variables backed by OrderedMap or equivalent stable structures, so no data is lost on canister upgrade.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+        "summary": "Restore the Employee Calendar page (CalendarPage.tsx) to display exactly as it did in version 227. This includes restoring the original layout, tab structure (bulk entry and daily bulk entry views), month/year selectors, table/grid appearance, inline editing controls for normal hours, overtime, and leave toggles, and any styling or component composition that was changed after v227. Do not alter any other pages, components, or backend logic.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/pages/EmployeesPage.tsx",
           "frontend/src/pages/CalendarPage.tsx",
-          "frontend/src/pages/PaymentsPage.tsx",
-          "frontend/src/pages/PayrollPage.tsx",
-          "frontend/src/pages/MonthlyBankSalariesPage.tsx",
-          "frontend/src/pages/LeavePage.tsx",
-          "frontend/src/main.tsx"
+          "frontend/src/components/BulkEntryTable.tsx",
+          "frontend/src/components/DailyBulkEntryTable.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/EmployeesPage.tsx",
-          "frontend/src/pages/PaymentsPage.tsx"
+          "frontend/src/pages/CalendarPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/components/BulkEntryTable.tsx",
-    "frontend/src/components/BulkLeaveDayDialog.tsx",
-    "frontend/src/components/BulkPaymentEntryTable.tsx",
-    "frontend/src/components/DailyBulkEntryTable.tsx",
-    "frontend/src/components/EmployeeCard.tsx",
-    "frontend/src/components/EmployeeDialog.tsx",
-    "frontend/src/components/Header.tsx",
-    "frontend/src/components/LeaveEditDialog.tsx",
-    "frontend/src/components/MonthlyBankSalariesView.tsx",
-    "frontend/src/components/PaymentEditDialog.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DataRecoveryPage.tsx",
-    "frontend/src/pages/EmployeesPage.tsx",
-    "frontend/src/pages/PaymentsPage.tsx",
+    "frontend/src/pages/CalendarPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

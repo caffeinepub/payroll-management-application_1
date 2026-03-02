@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2 } from 'lucide-react';
-import { useDeleteMonthlyBankSalary, useGetEmployees, useGetAllMonthlyBankSalaries } from '../hooks/useQueries';
-import type { MonthlyBankSalary } from '../hooks/useQueries';
+import { useDeleteMonthlyBankSalary, useGetEmployees, useGetMonthlyBankSalaries } from '../hooks/useQueries';
+import type { MonthlyBankSalary } from '../types';
 
 const MONTHS = [
   'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
@@ -24,7 +24,8 @@ export default function MonthlyBankSalariesView() {
   const [month] = useState(now.getMonth() + 1);
   const [year] = useState(now.getFullYear());
 
-  const { data: salaries = [], isLoading: salariesLoading } = useGetAllMonthlyBankSalaries(month, year);
+  // Pass undefined for employeeId to get all salaries for the month/year
+  const { data: salaries = [], isLoading: salariesLoading } = useGetMonthlyBankSalaries(undefined, month, year);
   const { data: employees = [], isLoading: employeesLoading } = useGetEmployees();
   const deleteMutation = useDeleteMonthlyBankSalary();
 
@@ -59,10 +60,7 @@ export default function MonthlyBankSalariesView() {
   }, [salaries, employeeMap]);
 
   const handleDelete = async (salary: MonthlyBankSalary) => {
-    await deleteMutation.mutateAsync({
-      employeeId: salary.employeeId,
-      id: salary.id,
-    });
+    await deleteMutation.mutateAsync(salary);
   };
 
   if (isLoading) {
@@ -76,56 +74,52 @@ export default function MonthlyBankSalariesView() {
   if (groups.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Δεν υπάρχουν καταχωρημένοι μηνιαίοι μισθοί τράπεζας
+        <p>Δεν υπάρχουν εγγραφές για {MONTHS[month - 1]} {year}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="text-sm text-muted-foreground mb-2">
+        Εμφάνιση για: <strong>{MONTHS[month - 1]} {year}</strong>
+      </div>
       {groups.map((group) => (
-        <div key={group.employeeId} className="border rounded-lg overflow-hidden">
-          <div className="bg-muted/50 px-4 py-3 flex items-center justify-between">
+        <div key={group.employeeId} className="border border-border rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold">{group.employeeName}</h3>
-              <Badge variant="outline" className="text-xs">
-                {group.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωριαίος'}
+              <span className="font-semibold text-foreground">{group.employeeName}</span>
+              <Badge variant={group.employeeType === 'monthly' ? 'default' : 'secondary'} className="text-xs">
+                {group.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωρομίσθιος'}
               </Badge>
             </div>
-            {group.salaries.length > 1 && (
-              <span className="text-sm text-muted-foreground">
-                Σύνολο: €{group.total.toFixed(2)} ({group.salaries.length} καταχωρήσεις)
-              </span>
-            )}
+            <span className="font-bold text-primary">{group.total.toFixed(2)}€</span>
           </div>
-          {group.salaries.map((salary) => (
-            <div
-              key={salary.id}
-              className="flex items-center justify-between px-4 py-3 border-t first:border-t-0"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium">
+
+          <div className="space-y-1">
+            {group.salaries.map((salary) => (
+              <div
+                key={salary.id}
+                className="flex items-center justify-between bg-muted/30 rounded px-3 py-2 text-sm"
+              >
+                <span className="text-muted-foreground">
                   {MONTHS[salary.month - 1]} {salary.year}
                 </span>
-                <span className="text-sm text-muted-foreground">€{salary.amount.toFixed(2)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-medium">{salary.amount.toFixed(2)}€</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(salary)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={() => handleDelete(salary)}
-                  disabled={deleteMutation.isPending}
-                >
-                  {deleteMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       ))}
     </div>

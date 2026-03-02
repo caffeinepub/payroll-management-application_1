@@ -1,60 +1,85 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarDays, Users } from 'lucide-react';
 import BulkEntryTable from '../components/BulkEntryTable';
 import DailyBulkEntryTable from '../components/DailyBulkEntryTable';
 
 const MONTHS = [
-  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
-  'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
+  'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος',
+  'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος',
+  'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος',
 ];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 export default function CalendarPage() {
   const now = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
-
-  const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Ημερολόγιο Ωρών</h1>
-        <p className="text-muted-foreground text-sm mt-1">Καταχώρηση ωρών εργασίας ανά εργαζόμενο</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Ημερολόγιο Εργαζομένων</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Καταχώριση ωρών εργασίας και υπερωριών
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={String(selectedMonth)}
+            onValueChange={(v) => setSelectedMonth(Number(v))}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i + 1} value={String(i + 1)}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(selectedYear)}
+            onValueChange={(v) => setSelectedYear(Number(v))}
+          >
+            <SelectTrigger className="w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEARS.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Tabs defaultValue="bulk-monthly">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="bulk-monthly">Μηνιαία Καταχώρηση</TabsTrigger>
-          <TabsTrigger value="daily">Ημερήσια Καταχώρηση</TabsTrigger>
+      <Tabs defaultValue="bulk">
+        <TabsList className="mb-4">
+          <TabsTrigger value="bulk" className="gap-2">
+            <Users className="w-4 h-4" />
+            Μαζική Καταχώριση
+          </TabsTrigger>
+          <TabsTrigger value="daily" className="gap-2">
+            <CalendarDays className="w-4 h-4" />
+            Ημερήσια Μαζική Καταχώριση
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="bulk-monthly" className="mt-4">
-          {/* Month/Year Selectors */}
-          <div className="flex gap-3 mb-4 flex-wrap">
-            <select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-            >
-              {MONTHS.map((m, i) => (
-                <option key={i + 1} value={i + 1}>{m}</option>
-              ))}
-            </select>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="border border-border rounded-md px-3 py-2 bg-background text-foreground text-sm"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-          </div>
-          <BulkEntryTable month={month} year={year} />
+        <TabsContent value="bulk">
+          <BulkEntryTable month={selectedMonth} year={selectedYear} />
         </TabsContent>
 
-        <TabsContent value="daily" className="mt-4">
-          <DailyBulkEntryTable />
+        <TabsContent value="daily">
+          <DailyBulkEntryTable month={selectedMonth} year={selectedYear} />
         </TabsContent>
       </Tabs>
     </div>

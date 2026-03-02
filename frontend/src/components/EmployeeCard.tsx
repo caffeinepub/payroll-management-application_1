@@ -1,103 +1,74 @@
-import { Pencil, Trash2, FolderOpen } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Edit, Trash2, FolderOpen, User, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import type { Employee } from '../backend';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import type { Employee } from '../types';
 
 interface EmployeeCardProps {
   employee: Employee;
-  onEdit: () => void;
-  onDelete?: () => void;
-  onFolderView?: () => void;
+  onEdit: (employee: Employee) => void;
+  onDelete: (employee: Employee) => void;
+  onViewFolder: (employee: Employee) => void;
 }
 
-export default function EmployeeCard({ employee, onEdit, onDelete, onFolderView }: EmployeeCardProps) {
+export default function EmployeeCard({ employee, onEdit, onDelete, onViewFolder }: EmployeeCardProps) {
+  const isMonthly = employee.employeeType === 'monthly';
+
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground truncate">{employee.fullName}</h3>
-            <Badge
-              variant={employee.employeeType === 'monthly' ? 'default' : 'secondary'}
-              className="mt-1 text-xs"
-            >
-              {employee.employeeType === 'monthly' ? 'Μηνιαίος' : 'Ωρομίσθιος'}
-            </Badge>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground leading-tight">{employee.fullName}</h3>
+              <Badge variant={isMonthly ? 'default' : 'secondary'} className="text-xs mt-1">
+                {isMonthly ? 'Μηνιαίος' : 'Ωρομίσθιος'}
+              </Badge>
+            </div>
           </div>
-          <div className="flex gap-1 ml-2 shrink-0">
-            {onFolderView && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onFolderView}
-                title="Προβολή φακέλου"
-              >
-                <FolderOpen className="w-4 h-4" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onEdit}
-              title="Επεξεργασία"
-            >
-              <Pencil className="w-4 h-4" />
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => onViewFolder(employee)} title="Φάκελος">
+              <FolderOpen className="w-4 h-4" />
             </Button>
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={onDelete}
-                title="Διαγραφή"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => onEdit(employee)} title="Επεξεργασία">
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="w-8 h-8 text-destructive hover:text-destructive" onClick={() => onDelete(employee)} title="Διαγραφή">
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-
-        <div className="space-y-1 text-sm text-muted-foreground">
-          {employee.employeeType === 'monthly' && employee.fixedMonthlySalary != null && (
-            <div className="flex justify-between">
-              <span>Μηνιαίος μισθός:</span>
-              <span className="font-medium text-foreground">
-                {employee.fixedMonthlySalary.toFixed(2)}€
-              </span>
-            </div>
-          )}
-          {employee.employeeType === 'hourly' && (
-            <div className="flex justify-between">
-              <span>Ωριαία αμοιβή:</span>
-              <span className="font-medium text-foreground">
-                {employee.hourlyRate.toFixed(2)}€/ώρα
-              </span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span>Υπερωρία:</span>
-            <span className="font-medium text-foreground">
-              {employee.overtimeRate.toFixed(2)}€/ώρα
-            </span>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-2">
+        {isMonthly && employee.fixedMonthlySalary != null && (
+          <div className="flex items-center gap-2 text-sm">
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Μηνιαίος μισθός:</span>
+            <span className="font-medium">{employee.fixedMonthlySalary.toFixed(2)}€</span>
           </div>
-          <div className="flex justify-between">
-            <span>Άδεια:</span>
-            <span className="font-medium text-foreground">
-              {Number(employee.totalAnnualLeaveDays)} ημέρες/έτος
-            </span>
+        )}
+        {!isMonthly && (
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Ωριαία αμοιβή:</span>
+            <span className="font-medium">{employee.hourlyRate.toFixed(2)}€</span>
           </div>
-          {employee.email && (
-            <div className="flex justify-between">
-              <span>Email:</span>
-              <span className="font-medium text-foreground truncate max-w-[150px]">
-                {employee.email}
-              </span>
-            </div>
-          )}
+        )}
+        <div className="flex items-center gap-2 text-sm">
+          <Clock className="w-4 h-4 text-muted-foreground" />
+          <span className="text-muted-foreground">Υπερωρία:</span>
+          <span className="font-medium">{employee.overtimeRate.toFixed(2)}€/ώρα</span>
         </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Ετήσιες άδειες:</span>
+          <span className="font-medium">{employee.totalAnnualLeaveDays} ημέρες</span>
+        </div>
+        {employee.email && (
+          <div className="text-sm text-muted-foreground truncate">{employee.email}</div>
+        )}
       </CardContent>
     </Card>
   );

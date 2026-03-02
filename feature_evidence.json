@@ -2,12 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-verify-and-fix-the-frontend-data-fetching-hooks-usequeries-ts-so-that-all-pages-employees-calendar-payments-payroll-monthly-bank-salaries-and-leave-correctly-fetch-and-display-data-returned-by-the-upgraded-backend-with-no-stale-cache-or-identity-gating-issues-preventing-data-from-rendering",
-      "featureTitle": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+      "featureId": "feature-restore-the-employee-calendar-page-calendarpage-tsx-to-display-exactly-as-it-did-in-version-227-this-includes-restoring-the-original-layout-tab-structure-bulk-entry-and-daily-bulk-entry-views-month-year-selectors-table-grid-appearance-inline-editing-controls-for-normal-hours-overtime-and-leave-toggles-and-any-styling-or-component-composition-that-was-changed-after-v227-do-not-alter-any-other-pages-components-or-backend-logic",
+      "featureTitle": "Restore the Employee Calendar page (CalendarPage.tsx) to display exactly as it did in version 227. This includes restoring the original layout, tab structure (bulk entry and daily bulk entry views), month/year selectors, table/grid appearance, inline editing controls for normal hours, overtime, and leave toggles, and any styling or component composition that was changed after v227. Do not alter any other pages, components, or backend logic.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/EmployeesPage.tsx",
-        "frontend/src/pages/PaymentsPage.tsx"
+        "frontend/src/pages/CalendarPage.tsx"
       ],
       "components": [
         "authorization@1.0.1",
@@ -20,7 +18,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "confidence": "high"
     }

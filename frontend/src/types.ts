@@ -1,3 +1,7 @@
+// ============================================================================
+// FRONTEND TYPES
+// ============================================================================
+
 export interface Employee {
   id: number;
   fullName: string;
@@ -8,46 +12,15 @@ export interface Employee {
   bankIban?: string;
   totalAnnualLeaveDays: number;
   fixedMonthlySalary?: number;
-  employeeType: string;
+  employeeType: string; // 'monthly' | 'hourly'
 }
 
 export interface WorkDay {
-  date: string;
+  date: string; // YYYY-MM-DD
   normalHours: number;
   overtimeHours: number;
   isLeave: boolean;
   leaveType?: string;
-}
-
-export interface PayrollRecord {
-  employeeId: number;
-  month: number;
-  year: number;
-  totalSalary: number;
-  fixedSalary?: number;
-  cashAmount: number;
-  totalHours: number;
-  overtimeHours: number;
-}
-
-export interface LeaveRecord {
-  employeeId: number;
-  totalAnnualLeaveDays: number;
-  leaveDaysUsed: number;
-  remainingLeaveDays: number;
-}
-
-export interface PayrollBalance {
-  employeeId: number;
-  month: number;
-  year: number;
-  remainingCashBalance: number;
-  remainingBankBalance: number;
-  remainingSalaryBalance: number;
-  carriedOverBankSalary: number;
-  carriedOverActualSalary: number;
-  carriedOverTotalSalary: number;
-  carriedOverBankFixedSalary: number;
 }
 
 export interface PaymentRecord {
@@ -67,10 +40,10 @@ export interface MonthlyBankSalary {
   amount: number;
 }
 
-export interface ChangeHistoryEntry {
-  date: string;
-  changeType: string;
-  description: string;
+export interface LeaveDay {
+  employeeId: number;
+  date: string; // YYYY-MM-DD
+  leaveType?: string;
 }
 
 export interface PayrollData {
@@ -90,4 +63,10 @@ export interface PayrollData {
   overtimeHours: number;
   leaveDays: number;
   employeeType: string;
+}
+
+export interface ChangeHistoryEntry {
+  date: string;
+  changeType: string;
+  description: string;
 }

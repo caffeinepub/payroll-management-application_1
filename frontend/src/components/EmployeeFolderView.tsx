@@ -1,123 +1,120 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Pencil, Mail, Phone, CreditCard, Calendar, DollarSign } from 'lucide-react';
-import { Employee } from '../backend';
+import { Edit, User, Mail, Phone, CreditCard, Calendar, DollarSign, Clock } from 'lucide-react';
+import type { Employee } from '../types';
+import { useGetChangeHistory } from '../hooks/useQueries';
 
 interface EmployeeFolderViewProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
   employee: Employee;
+  onClose: () => void;
   onEdit: (employee: Employee) => void;
 }
 
-export default function EmployeeFolderView({ open, onOpenChange, employee, onEdit }: EmployeeFolderViewProps) {
+export default function EmployeeFolderView({ open, employee, onClose, onEdit }: EmployeeFolderViewProps) {
+  const { data: history = [] } = useGetChangeHistory(employee.id);
+  const isMonthly = employee.employeeType === 'monthly';
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Φάκελος Εργαζομένου</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(employee)}
-              className="gap-1"
-            >
-              <Pencil className="w-3 h-3" />
+          <div className="flex items-center justify-between">
+            <DialogTitle>Φάκελος Υπαλλήλου</DialogTitle>
+            <Button variant="outline" size="sm" onClick={() => onEdit(employee)} className="flex items-center gap-1">
+              <Edit className="w-3 h-3" />
               Επεξεργασία
             </Button>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Basic Info */}
-          <div>
-            <h3 className="text-xl font-bold text-foreground">{employee.fullName}</h3>
-            <Badge
-              variant={employee.employeeType === 'monthly' ? 'default' : 'secondary'}
-              className="mt-1"
-            >
-              {employee.employeeType === 'monthly' ? 'Μηνιαίος Μισθός' : 'Ωρομίσθιος'}
-            </Badge>
-          </div>
-
-          <Separator />
-
-          {/* Salary Info */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Αμοιβές
-            </h4>
-            <div className="space-y-2 text-sm">
-              {employee.employeeType === 'monthly' && employee.fixedMonthlySalary != null && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Μηνιαίος μισθός:</span>
-                  <span className="font-medium">{employee.fixedMonthlySalary.toFixed(2)}€</span>
-                </div>
-              )}
-              {employee.employeeType === 'hourly' && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ωριαία αμοιβή:</span>
-                  <span className="font-medium">{employee.hourlyRate.toFixed(2)}€/ώρα</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Αμοιβή υπερωρίας:</span>
-                <span className="font-medium">{employee.overtimeRate.toFixed(2)}€/ώρα</span>
-              </div>
+        <div className="space-y-6 py-2">
+          {/* Employee Header */}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{employee.fullName}</h2>
+              <Badge variant={isMonthly ? 'default' : 'secondary'}>
+                {isMonthly ? 'Μηνιαίος' : 'Ωρομίσθιος'}
+              </Badge>
             </div>
           </div>
 
-          <Separator />
-
-          {/* Leave Info */}
-          <div>
-            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Άδεια
-            </h4>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Ετήσιες ημέρες άδειας:</span>
-              <span className="font-medium">{Number(employee.totalAnnualLeaveDays)} ημέρες</span>
+          {/* Salary Info */}
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Αμοιβές</h3>
+            {isMonthly && employee.fixedMonthlySalary != null && (
+              <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Μηνιαίος μισθός:</span>
+                <span className="font-semibold">{employee.fixedMonthlySalary.toFixed(2)}€</span>
+              </div>
+            )}
+            {!isMonthly && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Ωριαία αμοιβή:</span>
+                <span className="font-semibold">{employee.hourlyRate.toFixed(2)}€</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Αμοιβή υπερωρίας:</span>
+              <span className="font-semibold">{employee.overtimeRate.toFixed(2)}€/ώρα</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Ετήσιες άδειες:</span>
+              <span className="font-semibold">{employee.totalAnnualLeaveDays} ημέρες</span>
             </div>
           </div>
 
           {/* Contact Info */}
           {(employee.email || employee.phone || employee.bankIban) && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Στοιχεία Επικοινωνίας</h4>
-                <div className="space-y-2 text-sm">
-                  {employee.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <span>{employee.email}</span>
-                    </div>
-                  )}
-                  {employee.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <span>{employee.phone}</span>
-                    </div>
-                  )}
-                  {employee.bankIban && (
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-mono text-xs">{employee.bankIban}</span>
-                    </div>
-                  )}
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Στοιχεία Επικοινωνίας</h3>
+              {employee.email && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span>{employee.email}</span>
                 </div>
+              )}
+              {employee.phone && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <span>{employee.phone}</span>
+                </div>
+              )}
+              {employee.bankIban && (
+                <div className="flex items-center gap-2 text-sm">
+                  <CreditCard className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-mono">{employee.bankIban}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Change History */}
+          {history.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Ιστορικό Αλλαγών</h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {history.map((entry, i) => (
+                  <div key={i} className="bg-muted/30 rounded-lg p-3 text-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="text-xs">{entry.changeType}</Badge>
+                      <span className="text-xs text-muted-foreground">{entry.date}</span>
+                    </div>
+                    <p className="text-muted-foreground">{entry.description}</p>
+                  </div>
+                ))}
               </div>
-            </>
+            </div>
           )}
         </div>
       </DialogContent>

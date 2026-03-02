@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Restore data visibility in the HR Payroll Manager after a canister upgrade by fixing stable state declarations in the backend and ensuring the frontend correctly fetches and displays all previously stored data.
+**Goal:** Restore the Employee Calendar page to match the layout and functionality it had in version 227.
 
 **Planned changes:**
-- Audit all state collections in `backend/main.mo` (employees, work days, payments, leave records, monthly bank salaries, payroll records) and ensure every collection is declared as a `stable` variable so data survives canister upgrades.
-- Create `backend/migration.mo` with a pre/post-upgrade pattern that preserves and migrates existing stable state from previous deployments without data loss.
-- Fix `useQueries.ts` frontend data-fetching hooks to correctly fetch and display data from the upgraded backend across all pages (Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, Leave), including proper React Query cache invalidation.
+- Restore `CalendarPage.tsx` to its v227 layout, tab structure, and styling
+- Restore `BulkEntryTable.tsx` (all employees × days grid) to v227 appearance and inline editing controls
+- Restore `DailyBulkEntryTable.tsx` to v227 appearance and inline editing controls
+- Restore month/year selectors, normal hours, overtime hours, and leave toggle controls as they were in v227
 
-**User-visible outcome:** After deploying the updated canister, all previously entered employees, work hours, payments, leave records, and salary data reappear correctly on every page without requiring a manual refresh, and payroll calculations produce the same correct results as before.
+**User-visible outcome:** The Employee Calendar page displays exactly as it did in version 227, with both bulk entry and daily bulk entry tabs, functional month/year selectors, and working inline editing for normal hours, overtime, and leave toggles. No other pages or functionality are affected.

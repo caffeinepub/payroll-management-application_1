@@ -1,79 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Restore data visibility after version upgrade — fix state migration",
+  "title": "Restore Employee Calendar to Version 227 Format",
   "projectName": "HR Payroll Manager",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Implement a Motoko migration module (backend/migration.mo) that preserves and migrates existing stable state (employees, work days, payments, leave records, monthly bank salaries, and payroll records) from the previous actor version so that all data entered in earlier deployments (e.g., v227) remains accessible after upgrade.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "σε προηγουμενες εκδοσεις live και συγκεκριμενα στην εκδοση 227 live ειχα προσθεσει ήδη στην εφαρμογη εργαζομενους, πληρωμες, ωρες σε ημερολογιο εργαζομενων, αδειες, και εμφανιζοντουσαν οι μισθοδοσιες τους σωστα υπολογισμενες. Στην νεο εκδοση live δεν εμφανιζονται τα δεδομενα που ειχα προσθεσει"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All stable variables in the main actor (employees, workDays, payments, leaveRecords, monthlyBankSalaries) are declared with the `stable` keyword so their values survive canister upgrades.",
-        "backend/migration.mo exists and contains a preupgrade/postupgrade pattern (or equivalent) that safely carries over all existing collections without data loss.",
-        "After deploying the updated canister over the existing one, all previously stored employees reappear via the getEmployees query.",
-        "After deploying, all previously stored work days, payments, leave records, and monthly bank salaries are retrievable via their respective query endpoints.",
-        "Payroll calculations for the migrated data produce the same correct results as they did in v227."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Audit every state collection in backend/main.mo (employees, work days, payments, leave days, monthly bank salaries, payroll records) and ensure all are declared as `stable` variables backed by OrderedMap or equivalent stable structures, so no data is lost on canister upgrade.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-3"
-        ],
-        "quotes": [
-          "ΔΙΟΡΘΩΣΕ ΤΗΝ ΕΦΑΡΜΟΓΗ ΩΣΤΕ ΝΑ ΕΠΑΝΕΡΘΟΥΝ ΤΑ ΔΕΔΟΜΕΝΑ ΠΟΥ ΕΙΧΑ ΠΡΟΣΘΕΣΕΙ"
-        ]
-      },
-      "acceptanceCriteria": [
-        "No mutable (non-stable) top-level variable holds domain data that must survive upgrades.",
-        "All OrderedMap or TrieMap collections used for employees, workDays, payments, leaveRecords, and monthlyBankSalaries are wrapped in stable variables.",
-        "The actor compiles without warnings related to non-stable state."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+      "text": "Restore the Employee Calendar page (CalendarPage.tsx) to display exactly as it did in version 227. This includes restoring the original layout, tab structure (bulk entry and daily bulk entry views), month/year selectors, table/grid appearance, inline editing controls for normal hours, overtime, and leave toggles, and any styling or component composition that was changed after v227. Do not alter any other pages, components, or backend logic.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-3"
         ],
         "quotes": [
-          "Στην νεο εκδοση live δεν εμφανιζονται τα δεδομενα που ειχα προσθεσει"
+          "ΔΙΟΡΘΩΣΕ ΤΟ ΗΜΕΡΟΛΟΓΙΟ ΕΡΓΑΖΟΜΕΝΩΝ ΩΣΤΕ ΝΑ ΕΜΦΑΝΙΖΕΤΑΙ ΜΕ ΤΗΝ ΜΟΡΦΗ ΠΟΥ ΥΠΗΡΧΕ ΣΤΗΝ ΕΚΔΟΣΗ 227",
+          "ΜΗΝ ΑΛΛΑΞΕΙΣ ΤΙΠΟΤΑ ΑΛΛΟ"
         ]
       },
       "acceptanceCriteria": [
-        "The Employees page lists all previously added employees after login.",
-        "The Calendar page shows previously entered work hours for all employees.",
-        "The Payments page displays all previously recorded payment entries.",
-        "The Payroll page computes and displays correct salary totals using the restored data.",
-        "The Monthly Bank Salaries page shows all previously set salary records.",
-        "The Leave page shows all previously recorded leave days per employee.",
-        "React Query cache is properly invalidated after the actor becomes available, ensuring data loads without requiring a manual page refresh."
+        "The Employee Calendar page visually matches the layout and structure from version 227.",
+        "Month/year selectors are present and functional.",
+        "Both the bulk entry tab (all employees × days grid) and the daily bulk entry tab are displayed correctly.",
+        "Inline editing for normal hours, overtime hours, and leave toggles works as in v227.",
+        "No other pages, components, or backend files are modified."
       ]
     }
   ],
   "constraints": [
-    "Do not reset or wipe any existing stable state — the migration must be additive and non-destructive.",
-    "All Motoko logic must remain in the single main actor (backend/main.mo).",
-    "Do not modify any files listed under frontend.immutablePaths."
+    "Only modify files related to the Employee Calendar display (CalendarPage.tsx, BulkEntryTable.tsx, DailyBulkEntryTable.tsx, and any directly related calendar sub-components).",
+    "Do not change any backend logic, data models, or non-calendar frontend pages."
   ],
   "nonGoals": [
-    "Adding new features or UI changes beyond restoring existing data visibility.",
-    "Changing the payroll calculation logic.",
-    "Implementing a new authentication flow."
+    "Modifying the Payroll, Payments, Leave, or any other page.",
+    "Adding new features to the calendar.",
+    "Changing backend actor logic or data structures.",
+    "Altering authentication or navigation components."
   ],
   "imageRequirements": {
     "required": [],

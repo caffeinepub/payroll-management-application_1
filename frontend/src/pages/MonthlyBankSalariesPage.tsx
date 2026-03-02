@@ -74,18 +74,27 @@ export default function MonthlyBankSalariesPage() {
           />
         </TabsContent>
 
-        <TabsContent value="individual" className="space-y-4">
-          {employees.map((employee) => (
-            <MonthlyBankSalaryManager
-              key={Number(employee.id)}
-              employeeId={Number(employee.id)}
-              month={month}
-              year={year}
-            />
-          ))}
+        <TabsContent value="individual" className="space-y-4 mt-4">
+          {employees.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Δεν υπάρχουν εργαζόμενοι
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {employees.map((employee) => (
+                <MonthlyBankSalaryManager
+                  key={Number(employee.id)}
+                  employeeId={Number(employee.id)}
+                  employeeName={employee.fullName}
+                  month={month}
+                  year={year}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="view">
+        <TabsContent value="view" className="mt-4">
           <MonthlyBankSalariesView />
         </TabsContent>
       </Tabs>

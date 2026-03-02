@@ -1,43 +1,23 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "HR/payroll management app with employees, calendar hours, payments, leaves, and payroll calculations. User reports data loss between versions — previously added employees, payments, calendar hours, and leaves are not showing in the new version.",
-  "architectural_notes": [
-    "App manages employees, payments, calendar hours, leaves, and payroll calculations",
-    "Data persistence must be maintained across versions — data added in previous builds must carry over"
-  ],
+  "summary": "HR/payroll management app with employee calendar, payroll, payments, and leave features. User requested fix to employee calendar display to restore the format from version 227.",
+  "architectural_notes": [],
   "known_issues": [
-    "Data loss between versions: employees, payments, calendar hours, and leaves added in v227 are not visible in the latest version"
+    "Employee calendar display is broken in v249; needs to be restored to match v227 format"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-verify-and-fix-the-frontend-data-fetching-hooks-usequeries-ts-so-that-all-pages-employees-calendar-payments-payroll-monthly-bank-salaries-and-leave-correctly-fetch-and-display-data-returned-by-the-upgraded-backend-with-no-stale-cache-or-identity-gating-issues-preventing-data-from-rendering",
-      "title": "Verify and fix the frontend data-fetching hooks (useQueries.ts) so that all pages — Employees, Calendar, Payments, Payroll, Monthly Bank Salaries, and Leave — correctly fetch and display data returned by the upgraded backend, with no stale cache or identity-gating issues preventing data from rendering.",
+      "id": "feature-restore-the-employee-calendar-page-calendarpage-tsx-to-display-exactly-as-it-did-in-version-227-this-includes-restoring-the-original-layout-tab-structure-bulk-entry-and-daily-bulk-entry-views-month-year-selectors-table-grid-appearance-inline-editing-controls-for-normal-hours-overtime-and-leave-toggles-and-any-styling-or-component-composition-that-was-changed-after-v227-do-not-alter-any-other-pages-components-or-backend-logic",
+      "title": "Restore the Employee Calendar page (CalendarPage.tsx) to display exactly as it did in version 227. This includes restoring the original layout, tab structure (bulk entry and daily bulk entry views), month/year selectors, table/grid appearance, inline editing controls for normal hours, overtime, and leave toggles, and any styling or component composition that was changed after v227. Do not alter any other pages, components, or backend logic.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Implement a Motoko migration module (backend/migration.mo) that preserves and migrates existing stable state (employees, work days, payments, leave records, monthly bank salaries, and payroll records) from the previous actor version so that all data entered in earlier deployments (e.g., v227) remains accessible after upgrade.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Audit every state collection in backend/main.mo (employees, work days, payments, leave days, monthly bank salaries, payroll records) and ensure all are declared as `stable` variables backed by OrderedMap or equivalent stable structures, so no data is lost on canister upgrade.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    }
-  ],
+  "new_feature_requests": [],
   "gameProjectType": "none",
   "projectName": "HR Payroll Manager",
   "clarification_mode": "instant",

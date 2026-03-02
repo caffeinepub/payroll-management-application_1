@@ -1,48 +1,82 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
+import { useInternetIdentity } from './hooks/useInternetIdentity';
+import { useGetCallerUserProfile } from './hooks/useQueries';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import LoginPage from './pages/LoginPage';
 import EmployeesPage from './pages/EmployeesPage';
 import CalendarPage from './pages/CalendarPage';
-import PaymentsPage from './pages/PaymentsPage';
 import PayrollPage from './pages/PayrollPage';
-import MonthlyBankSalariesPage from './pages/MonthlyBankSalariesPage';
+import PaymentsPage from './pages/PaymentsPage';
 import LeavePage from './pages/LeavePage';
+import MonthlyBankSalariesPage from './pages/MonthlyBankSalariesPage';
 import DataRecoveryPage from './pages/DataRecoveryPage';
+import ProfileSetupModal from './components/ProfileSetupModal';
+
+export type PageType =
+  | 'employees'
+  | 'calendar'
+  | 'payroll'
+  | 'payments'
+  | 'leaves'
+  | 'bankSalaries'
+  | 'dataRecovery';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
       refetchOnMount: true,
-      refetchOnWindowFocus: false,
-      retry: 2,
     },
   },
 });
 
-export type Page = 'employees' | 'calendar' | 'payments' | 'payroll' | 'monthly-bank-salaries' | 'leave' | 'data-recovery';
+function AppContent() {
+  const [activePage, setActivePage] = useState<PageType>('employees');
+  const { identity, isInitializing } = useInternetIdentity();
+  const isAuthenticated = !!identity;
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('employees');
+  const {
+    data: userProfile,
+    isLoading: profileLoading,
+    isFetched: profileFetched,
+  } = useGetCallerUserProfile();
+
+  const showProfileSetup = isAuthenticated && !profileLoading && profileFetched && userProfile === null;
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Φόρτωση...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   const renderPage = () => {
-    switch (currentPage) {
+    switch (activePage) {
       case 'employees':
         return <EmployeesPage />;
       case 'calendar':
         return <CalendarPage />;
-      case 'payments':
-        return <PaymentsPage />;
       case 'payroll':
         return <PayrollPage />;
-      case 'monthly-bank-salaries':
-        return <MonthlyBankSalariesPage />;
-      case 'leave':
+      case 'payments':
+        return <PaymentsPage />;
+      case 'leaves':
         return <LeavePage />;
-      case 'data-recovery':
+      case 'bankSalaries':
+        return <MonthlyBankSalariesPage />;
+      case 'dataRecovery':
         return <DataRecoveryPage />;
       default:
         return <EmployeesPage />;
@@ -50,15 +84,22 @@ export default function App() {
   };
 
   return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header activePage={activePage} onPageChange={setActivePage} />
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+        {renderPage()}
+      </main>
+      <Footer />
+      {showProfileSetup && <ProfileSetupModal />}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
-          <Header currentPage={currentPage} onNavigate={setCurrentPage} />
-          <main className="flex-1 container mx-auto px-4 py-6">
-            {renderPage()}
-          </main>
-          <Footer />
-        </div>
+        <AppContent />
         <Toaster />
       </ThemeProvider>
     </QueryClientProvider>
